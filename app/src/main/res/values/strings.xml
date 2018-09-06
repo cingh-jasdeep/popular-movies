@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Pop Movies</string>
+
+
+    <!-- - - - - - - - - - - - - -->
+    <!--Used by MovieDateUtils-->
+    <!-- - - - - - - - - - - - - -->
+
+    <!-- For labelling today's forecast [CHAR LIMIT=15] -->
+    <string name="TMDB_DATE_FORMAT">yyyy-mm-dd</string>
+    <string name="error_message">An error has occurred. Please try again by clicking REFRESH</string>
+    <string name="movie_picture_content_description">Movie picture</string>
+    <string name="action_refresh">Refresh</string>
+</resources>
