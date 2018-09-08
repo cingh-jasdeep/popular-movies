@@ -19,8 +19,6 @@
  * and modified according to needs of this project
  */
 
-//TODO # 1 check implementation
-
 package example.android.com.popularmovies.utilities;
 
 import android.net.Uri;
@@ -59,8 +57,8 @@ public final class NetworkUtils {
      * API parameter keys
      * themoviedb.org API parameter keys
      */
-    final static String API_KEY_PARAM = "api_key";
-    final static String PAGE_PARAM = "page";
+    final static private String API_KEY_PARAM = "api_key";
+    final static private String PAGE_PARAM = "page";
 
     /*
      * some constants for themoviedb.org API
@@ -76,7 +74,7 @@ public final class NetworkUtils {
      */
     public static URL buildUrl(int type, int pageNumber) {
 
-        String baseUrl = null;
+        String baseUrl;
         switch (type) {
             case MoviesPreferences.POPULAR_MOVIES:
                 baseUrl = POPULAR_MOVIES_URL;

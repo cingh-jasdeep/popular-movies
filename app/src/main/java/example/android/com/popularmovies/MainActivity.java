@@ -22,38 +22,31 @@ package example.android.com.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
-import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 
-import java.net.URL;
+import java.util.ArrayList;
 
 import example.android.com.popularmovies.data.Movie;
 import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
-import example.android.com.popularmovies.utilities.NetworkUtils;
-import example.android.com.popularmovies.utilities.PosterHelper;
-import example.android.com.popularmovies.utilities.TheMovieDbJsonUtils;
+import example.android.com.popularmovies.utilities.FetchMoviesTask;
 
 public class MainActivity extends AppCompatActivity
-        implements MoviesAdapter.MoviesAdapterOnClickHandler {
+        implements AdapterView.OnItemClickListener, FetchMoviesTask.OnUpdateListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
-    private RecyclerView mRecyclerView;
+    private GridView mGridView;
     private MoviesAdapter mMoviesAdapter;
 
     private TextView mErrorMessageDisplay;
@@ -65,55 +58,25 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        /*
-         * Using findViewById, we get a reference to our RecyclerView from xml. This allows us to
-         * do things like set the adapter of the RecyclerView and toggle the visibility.
-         */
-        mRecyclerView = (RecyclerView) findViewById(R.id.rv_movies);
+        mGridView = findViewById(R.id.gv_movies);
+
+        mMoviesAdapter = new MoviesAdapter(this, new ArrayList<Movie>());
+
+        mGridView.setAdapter(mMoviesAdapter);
+
+        mGridView.setOnItemClickListener(this);
 
         /* This TextView is used to display errors and will be hidden if there are no errors */
-        mErrorMessageDisplay = (TextView) findViewById(R.id.tv_error_message_display);
-
-//        /*
-//         * LinearLayoutManager can support HORIZONTAL or VERTICAL orientations. The reverse layout
-//         * parameter is useful mostly for HORIZONTAL layouts that should reverse for right to left
-//         * languages.
-//         */
-//        LinearLayoutManager layoutManager
-//                = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
-//
-//        mRecyclerView.setLayoutManager(layoutManager);
-
-        GridLayoutManager layoutManager
-                = new GridLayoutManager(this,
-                PosterHelper.calculateNoOfColumns(getApplicationContext()));
-        mRecyclerView.setLayoutManager(layoutManager);
-
-        /*
-         * Use this setting to improve performance if you know that changes in content do not
-         * change the child layout size in the RecyclerView
-         */
-        mRecyclerView.setHasFixedSize(true);
-
-        /*
-         * The MoviesAdapter is responsible for linking our weather data with the Views that
-         * will end up displaying our weather data.
-         */
-        mMoviesAdapter = new MoviesAdapter(this, this);
-
-        /* Setting the adapter attaches it to the RecyclerView in our layout. */
-        mRecyclerView.setAdapter(mMoviesAdapter);
+        mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
 
         /*
          * The ProgressBar that will indicate to the user that we are loading data. It will be
          * hidden when no data is loading.
-         *
-         * Please note: This so called "ProgressBar" isn't a bar by default. It is more of a
-         * circle. We didn't make the rules (or the names of Views), we just follow them.
          */
-        mLoadingIndicator = (ProgressBar) findViewById(R.id.pb_loading_indicator);
+        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
 
-        /* Once all of our views are setup, we can load the weather data. */
+
+        /* Once all of our views are setup, we can load the movie data. */
         loadMovieData();
     }
 
@@ -128,103 +91,57 @@ public class MainActivity extends AppCompatActivity
         //TODO load from preferences here
         int queryType = MoviesPreferences.POPULAR_MOVIES;
         int queryPage = 1;
-        MovieQuery movieQuery = new MovieQuery(queryType, queryPage);
+        MovieQuery movieQuery = new MovieQuery(this, queryType, queryPage);
+        /* show loading before fetching movie details from network */
+        mLoadingIndicator.setVisibility(View.VISIBLE);
 
-        new FetchMoviesTask().execute(movieQuery);
+        FetchMoviesTask task = new FetchMoviesTask();
+        task.setUpdateListener(this);
+        task.execute(movieQuery);
+
     }
 
-    /**
-     * This method is overridden by our MainActivity class in order to handle RecyclerView item
-     * clicks.
-     *
-     * @param movie The movie object for the poster that was clicked
-     */
-    @Override
-    public void onClick(Movie movie) {
-        Context context = this;
-        Toast.makeText(context, movie.getVoteAverage(), Toast.LENGTH_LONG)
-                .show();
-//        Class destinationClass = DetailActivity.class;
-//        Intent intentToStartDetailActivity = new Intent(context, destinationClass);
-//        intentToStartDetailActivity.putExtra(Intent.EXTRA_TEXT, weatherForDay);
-//        startActivity(intentToStartDetailActivity);
-    }
 
     /**
-     * This method will make the View for the weather data visible and
+     * This method will make the View for the movie grid visible and
      * hide the error message.
-     * <p>
-     * Since it is okay to redundantly set the visibility of a View, we don't
-     * need to check whether each view is currently visible or invisible.
      */
     private void showMovieDataView() {
         /* First, make sure the error is invisible */
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
         /* Then, make sure the weather data is visible */
-        mRecyclerView.setVisibility(View.VISIBLE);
+        mGridView.setVisibility(View.VISIBLE);
     }
 
     /**
-     * This method will make the error message visible and hide the weather
-     * View.
-     * <p>
-     * Since it is okay to redundantly set the visibility of a View, we don't
-     * need to check whether each view is currently visible or invisible.
+     * This method will make the error message visible and hide the movie grid.
      */
     private void showErrorMessage() {
         /* First, hide the currently visible data */
-        mRecyclerView.setVisibility(View.INVISIBLE);
+        mGridView.setVisibility(View.INVISIBLE);
         /* Then, show the error */
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
-    public class FetchMoviesTask extends AsyncTask<MovieQuery, Void, Movie[]> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mLoadingIndicator.setVisibility(View.VISIBLE);
-        }
 
-        @Override
-        protected Movie[] doInBackground(MovieQuery... movieQueries) {
-            /* If there's no zip code, there's nothing to look up. */
-            if (movieQueries.length == 0) {
-                return null;
-            }
+    /**
+     * This method is overridden by our MainActivity class in order to handle GridView item
+     * clicks.
+     */
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Movie movie = (Movie) parent.getItemAtPosition(position);
+        Context context = this;
 
-            int queryType = movieQueries[0].type;
-            int queryPage = movieQueries[0].page;
+        Class destinationClass = MovieDetailsActivity.class;
+        Intent intent = new Intent(context, destinationClass);
 
-            URL moviesRequestUrl = NetworkUtils.buildUrl(queryType, queryPage);
-
-            try {
-                String jsonMovieResponse = NetworkUtils
-                        .getResponseFromHttpUrl(moviesRequestUrl);
-
-                Movie[] moviesData = TheMovieDbJsonUtils
-                        .getMovieDataFromJson(MainActivity.this, jsonMovieResponse);
-
-                return moviesData;
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-
-        @Override
-        protected void onPostExecute(Movie[] movieData) {
-            mLoadingIndicator.setVisibility(View.INVISIBLE);
-            if (movieData != null) {
-                showMovieDataView();
-                mMoviesAdapter.setMoviesData(movieData);
-            } else {
-                showErrorMessage();
-            }
-        }
+        /* Put movie object into intent extra
+         * see https://www.techjini.com/blog/passing-objects-via-intent-in-android/
+         */
+        intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
+        startActivity(intent);
     }
 
-//
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
@@ -239,18 +156,31 @@ public class MainActivity extends AppCompatActivity
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.action_refresh) {
-            mMoviesAdapter.setMoviesData(null);
-            loadMovieData();
+        if (id == R.id.action_settings) {
+            Intent startSettingsActivity = new Intent(this, SettingsActivity.class);
+            startActivity(startSettingsActivity);
             return true;
         }
 
-//        // COMPLETED (2) Launch the map when the map menu item is clicked
-//        if (id == R.id.action_map) {
-//            openLocationInMap();
+
+//        if (id == R.id.action_refresh) {
+//            mMoviesAdapter.setMoviesData(null);
+//            loadMovieData();
 //            return true;
 //        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onUpdate(Movie[] movieData) {
+        /* hide loading after network request */
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        if (movieData != null) {
+            showMovieDataView();
+            mMoviesAdapter.setMoviesData(movieData);
+        } else {
+            showErrorMessage();
+        }
     }
 }

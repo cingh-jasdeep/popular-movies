@@ -23,10 +23,17 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/rv_movies"
+    <GridView
+        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="match_parent"
+        android:columnWidth="@dimen/poster_width"
+        android:numColumns="auto_fit"
+        android:verticalSpacing="0dp"
+        android:horizontalSpacing="0dp"
+        android:stretchMode="columnWidth"
+        android:id="@+id/gv_movies">
+    </GridView>
 
     <TextView
         android:id="@+id/tv_error_message_display"
@@ -35,6 +42,7 @@
         android:padding="16dp"
         android:text="@string/error_message"
         android:textSize="20sp"
+        android:layout_gravity="center"
         android:visibility="invisible" />
 
     <ProgressBar

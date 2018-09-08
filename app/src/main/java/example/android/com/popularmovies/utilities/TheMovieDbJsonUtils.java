@@ -31,7 +31,6 @@ import java.util.Date;
 
 import example.android.com.popularmovies.data.Movie;
 
-//TODO #2 check implementation
 /**
  * Utility functions to handle TheMovieDb JSON data.
  */
@@ -74,7 +73,7 @@ public final class TheMovieDbJsonUtils {
 
 
         /* Movie array to hold each movie's information */
-        Movie[] parsedMovieData = null;
+        Movie[] parsedMovieData;
 
         JSONObject movieDbJson = new JSONObject(movieDbJsonStr);
 
@@ -113,7 +112,7 @@ public final class TheMovieDbJsonUtils {
 
             movieTitle = movieInfo.optString(TMDB_TITLE);
 
-            releaseDate = MovieDateUtils.getDate(context,
+            releaseDate = MovieUtils.getDate(context,
                     movieInfo.optString(TMDB_RELEASE_DATE));
 
             moviePosterUrl = PosterHelper
