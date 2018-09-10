@@ -41,6 +41,7 @@ import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
 import example.android.com.popularmovies.utilities.FetchMoviesTask;
 
+//TODO implement loader manager from sunshine for lifecycle aware loading
 public class MainActivity extends AppCompatActivity
         implements AdapterView.OnItemClickListener, FetchMoviesTask.OnUpdateListener {
 
