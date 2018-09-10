@@ -23,6 +23,11 @@ package example.android.com.popularmovies;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.AsyncTaskLoader;
+import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,18 +39,26 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
+import org.json.JSONException;
+
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.ArrayList;
 
 import example.android.com.popularmovies.data.Movie;
 import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
-import example.android.com.popularmovies.utilities.FetchMoviesTask;
+import example.android.com.popularmovies.utilities.NetworkUtils;
+import example.android.com.popularmovies.utilities.TheMovieDbJsonUtils;
 
-//TODO implement loader manager from sunshine for lifecycle aware loading
 public class MainActivity extends AppCompatActivity
-        implements AdapterView.OnItemClickListener, FetchMoviesTask.OnUpdateListener {
+        implements AdapterView.OnItemClickListener,
+        LoaderManager.LoaderCallbacks<Movie[]>{
 
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final int FETCH_MOVIES_LOADER = 22;
+    private static final String EXTRA_MOVIE_QUERY = "movie_extra";
 
     private GridView mGridView;
     private MoviesAdapter mMoviesAdapter;
@@ -78,27 +91,137 @@ public class MainActivity extends AppCompatActivity
 
 
         /* Once all of our views are setup, we can load the movie data. */
-        loadMovieData();
+
+        //TODO load from preferences here
+        // eg.       int queryType = MoviesPreferences.getPreferredWeatherLocation(this);
+
+        int queryType = MoviesPreferences.POPULAR_MOVIES;
+        int queryPage = 1;
+
+        loadMovieData(queryType, queryPage);
     }
 
     /**
      * This method will get the user's preferred location for weather, and then tell some
      * background method to get the weather data in the background.
      */
-    private void loadMovieData() {
+    private void loadMovieData(int queryType, int queryPage) {
         showMovieDataView();
 
-//        int queryType = MoviesPreferences.getPreferredWeatherLocation(this);
-        //TODO load from preferences here
-        int queryType = MoviesPreferences.POPULAR_MOVIES;
-        int queryPage = 1;
-        MovieQuery movieQuery = new MovieQuery(this, queryType, queryPage);
-        /* show loading before fetching movie details from network */
-        mLoadingIndicator.setVisibility(View.VISIBLE);
+        MovieQuery movieQuery = new MovieQuery(queryType, queryPage);
+        Bundle movieQueryBundle = new Bundle();
+        movieQueryBundle.putParcelable(EXTRA_MOVIE_QUERY, movieQuery);
 
-        FetchMoviesTask task = new FetchMoviesTask();
-        task.setUpdateListener(this);
-        task.execute(movieQuery);
+        LoaderManager loaderManager = getSupportLoaderManager();
+        Loader<Movie[]> fetchMoviesLoader = loaderManager.getLoader(FETCH_MOVIES_LOADER);
+        if(fetchMoviesLoader == null) {
+            loaderManager.initLoader(FETCH_MOVIES_LOADER, movieQueryBundle, this);
+        } else {
+            loaderManager.restartLoader(FETCH_MOVIES_LOADER, movieQueryBundle, this);
+        }
+
+    }
+
+    @NonNull
+    @Override
+    public Loader<Movie[]> onCreateLoader(int i, @Nullable Bundle bundle) {
+        return new FetchMoviesTaskLoader(this, bundle);
+    }
+
+    private static class FetchMoviesTaskLoader extends AsyncTaskLoader<Movie[]> {
+
+        Movie[] mMoviesData = null;
+        Bundle mQueryBundle = null;
+
+        private WeakReference<MainActivity> activityReference;
+
+        // only retain a weak reference to the activity
+        FetchMoviesTaskLoader(MainActivity context, Bundle bundle) {
+            super(context);
+            activityReference = new WeakReference<>(context);
+            mQueryBundle = bundle;
+        }
+
+        @Override
+        protected void onStartLoading() {
+            super.onStartLoading();
+
+            if(mQueryBundle == null) {
+                return;
+            }
+
+            // get a reference to the activity if it is still there
+            MainActivity activity = activityReference.get();
+            if (activity == null || activity.isFinishing()) return;
+
+            /* show loading before fetching movie details from network */
+            activity.mLoadingIndicator.setVisibility(View.VISIBLE);
+
+            /* if there is cached data return that instead */
+            if(mMoviesData != null) {
+                deliverResult(mMoviesData);
+            }
+            forceLoad();
+
+        }
+
+        @Nullable
+        @Override
+        public Movie[] loadInBackground() {
+            MovieQuery query = mQueryBundle.getParcelable(EXTRA_MOVIE_QUERY);
+
+            /* If there's no query, there's nothing to look up. */
+            if (query == null) {
+                return null;
+            }
+
+            int queryType = query.type;
+            int queryPage = query.page;
+
+            URL moviesRequestUrl = NetworkUtils.buildUrl(queryType, queryPage);
+
+            try {
+                if ( moviesRequestUrl == null ) {
+                    return null;
+                }
+
+                String jsonMovieResponse = NetworkUtils
+                        .getResponseFromHttpUrl(moviesRequestUrl);
+
+                return TheMovieDbJsonUtils
+                        .getMovieDataFromJson(getContext(),
+                                jsonMovieResponse);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+                return null;
+            } catch (JSONException e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        public void deliverResult(@Nullable Movie[] data) {
+            mMoviesData = data;
+            super.deliverResult(data);
+        }
+    }
+
+    @Override
+    public void onLoadFinished(@NonNull Loader<Movie[]> loader, Movie[] moviesData) {
+        /* hide loading after network request */
+        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        if (moviesData != null) {
+            showMovieDataView();
+            mMoviesAdapter.setMoviesData(moviesData);
+        } else {
+            showErrorMessage();
+        }
+    }
+
+    @Override
+    public void onLoaderReset(@NonNull Loader<Movie[]> loader) {
 
     }
 
@@ -173,15 +296,6 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onUpdate(Movie[] movieData) {
-        /* hide loading after network request */
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (movieData != null) {
-            showMovieDataView();
-            mMoviesAdapter.setMoviesData(movieData);
-        } else {
-            showErrorMessage();
-        }
-    }
+
+
 }
