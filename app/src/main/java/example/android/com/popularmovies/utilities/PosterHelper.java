@@ -1,14 +1,10 @@
 package example.android.com.popularmovies.utilities;
 
-import android.content.Context;
 import android.net.Uri;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-
-import example.android.com.popularmovies.R;
 
 public class PosterHelper {
 
@@ -38,33 +34,15 @@ public class PosterHelper {
                 .appendEncodedPath(posterPath)
                 .build();
 
-        URL url = null;
         try {
+            URL url;
             url = new URL(builtUri.toString());
+            Log.v(TAG, "Built Poster URI " + url);
+            return url.toString();
         } catch (MalformedURLException e) {
             e.printStackTrace();
+            return null;
         }
-
-        Log.v(TAG, "Built Poster URI " + url);
-
-        return url.toString();
-    }
-
-    /**
-     * Used to calculate columns for the poster grid
-     * Reference link :
-     * https://stackoverflow.com/questions/33575731/gridlayoutmanager-how-to-auto-fit-columns
-     *
-     * @param context Context object used to get screen size and poster_width dimensions
-     * @return Calculated number of columns for the poster grid
-     */
-
-    public static int calculateNoOfColumns(Context context) {
-        DisplayMetrics displayMetrics = context.getResources().getDisplayMetrics();
-        float dpWidth = displayMetrics.widthPixels;
-        float posterWidth = context.getResources().getDimension(R.dimen.poster_width);
-        int noOfColumns = (int) (dpWidth / posterWidth);
-        return noOfColumns;
     }
 
 }

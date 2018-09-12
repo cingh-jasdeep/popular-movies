@@ -20,7 +20,7 @@
 
             <TextView
                 android:textColor="@color/white"
-                android:textSize="38sp"
+                android:textSize="@dimen/detail_title_text_size"
                 android:paddingLeft="@dimen/detail_title_left_right_padding"
                 android:paddingRight="@dimen/detail_title_left_right_padding"
                 android:paddingTop="@dimen/detail_title_top_bottom_padding"
@@ -44,8 +44,8 @@
 
             <ImageView
                 android:id="@+id/iv_movie_detail_poster"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/poster_detail_height"
+                android:layout_width="@dimen/poster_detail_width"
+                android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/movie_picture_content_description"
                 android:scaleType="centerCrop"
@@ -83,7 +83,7 @@
                 android:paddingRight="16dp"
                 android:layout_marginBottom="16dp"
                 android:id="@+id/tv_plot_synopsis"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 style="@style/Base.TextAppearance.AppCompat.Small"
                 tools:text="Every child comes into the world full of promise, and none more so than Chappie: he is gifted, special, a prodigy. Like any child, Chappie will come under the influence of his surroundings—some good, some bad—and he will rely on his heart and soul to find his way in the world and become his own man. But there's one thing that makes Chappie different from any one else: he is a robot."/>

@@ -21,6 +21,7 @@
 
 package example.android.com.popularmovies.utilities;
 
+import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -31,7 +32,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Scanner;
 
-import example.android.com.popularmovies.data.MoviesPreferences;
+import example.android.com.popularmovies.R;
 
 /**
  * These utilities will be used to communicate with the movie servers.
@@ -69,27 +70,25 @@ public final class NetworkUtils {
     /**
      * Builds the URL used to fetch movie lists from to the movie database
      *
-     * @param type The type of movie list to be fetched. See {@link example.android.com.popularmovies.data.MoviesPreferences}
+     * @param type The sort_order of movie list to be fetched. See {@link example.android.com.popularmovies.data.MoviesPreferences}
      * @return The URL to use to query the weather server.
      */
-    public static URL buildUrl(int type, int pageNumber) {
+    public static URL buildUrl(Context context, String type, int pageNumber) {
 
         String baseUrl;
-        switch (type) {
-            case MoviesPreferences.POPULAR_MOVIES:
-                baseUrl = POPULAR_MOVIES_URL;
-                break;
-            case MoviesPreferences.TOP_RATED_MOVIES:
-                baseUrl = TOP_RATED_MOVIES_URL;
-                break;
-            default:
-                baseUrl = POPULAR_MOVIES_URL;
-                break;
+
+        if(type.equals(context.getString(R.string.pref_sort_popular))) {
+            baseUrl = POPULAR_MOVIES_URL;
+        } else if(type.equals(context.getString(R.string.pref_sort_top_rated))) {
+            baseUrl = TOP_RATED_MOVIES_URL;
+        } else {
+            Log.d(TAG, "buildUrl() called with: sort_order = [" + type + "], pageNumber = [" + pageNumber + "]");
+            return null;
         }
 
         // check for invalid page number
         if(pageNumber <= 0) {
-            Log.d(TAG, "buildUrl() called with: type = [" + type + "], pageNumber = [" + pageNumber + "]");
+            Log.d(TAG, "buildUrl() called with: sort_order = [" + type + "], pageNumber = [" + pageNumber + "]");
             return null;
         }
 

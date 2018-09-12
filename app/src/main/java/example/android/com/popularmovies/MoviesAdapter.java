@@ -83,16 +83,28 @@ public class MoviesAdapter extends ArrayAdapter<Movie> {
                         .into(moviePoster);
             }
         }
+
+        /* this is generally never true
+        * I am doing this to avoid lint error */
+        if(convertView == null) {
+            return new View(getContext());
+        }
+
         return convertView;
     }
 
+    /**
+     * Replace old movies data with new data
+     * */
+
     public void setMoviesData(Movie[] movies) {
-        mMoviesData.clear();
-        if(movies!=null && movies.length!=0)
-        {
-            mMoviesData.addAll(Arrays.asList(movies));
+        if(mMoviesData!=null) {
+            mMoviesData.clear();
+            if (movies != null && movies.length != 0) {
+                mMoviesData.addAll(Arrays.asList(movies));
+            }
+            notifyDataSetChanged();
         }
-        notifyDataSetChanged();
     }
 
 }

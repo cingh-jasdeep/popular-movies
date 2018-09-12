@@ -23,7 +23,7 @@
         </activity>
         <activity
             android:name=".MovieDetailsActivity"
-            android:label="@string/movie_detail_title"
+            android:label="@string/movie_detail_label"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -31,11 +31,7 @@
         </activity>
         <activity
             android:name=".SettingsActivity"
-            android:label="@string/action_settings"
-            android:parentActivityName=".MainActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".MainActivity" />
+            android:label="@string/action_settings">
         </activity>
     </application>
 

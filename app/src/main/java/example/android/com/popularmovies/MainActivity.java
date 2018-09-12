@@ -22,12 +22,15 @@ package example.android.com.popularmovies;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -54,11 +57,18 @@ import example.android.com.popularmovies.utilities.TheMovieDbJsonUtils;
 
 public class MainActivity extends AppCompatActivity
         implements AdapterView.OnItemClickListener,
-        LoaderManager.LoaderCallbacks<Movie[]>{
+        LoaderManager.LoaderCallbacks<Movie[]>,
+        SharedPreferences.OnSharedPreferenceChangeListener{
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int FETCH_MOVIES_LOADER = 22;
+
+    private static final int FETCH_MOVIES_LOADER_ID = 22;
     private static final String EXTRA_MOVIE_QUERY = "movie_extra";
+
+    // starting page to fetch movies from the api
+    private static final int FETCH_MOVIES_LOADER_START_PAGE = 1;
+
+
 
     private GridView mGridView;
     private MoviesAdapter mMoviesAdapter;
@@ -66,6 +76,14 @@ public class MainActivity extends AppCompatActivity
     private TextView mErrorMessageDisplay;
 
     private ProgressBar mLoadingIndicator;
+
+    // flag to indicate a change in user preferences
+    private static boolean mPrefUpdate = false;
+
+    // variable to store current page fetched from api
+    // i will use later to make infinite scroll
+    private static int mCurrPage = 1;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,35 +107,61 @@ public class MainActivity extends AppCompatActivity
          */
         mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
 
-
         /* Once all of our views are setup, we can load the movie data. */
 
-        //TODO load from preferences here
-        // eg.       int queryType = MoviesPreferences.getPreferredWeatherLocation(this);
 
-        int queryType = MoviesPreferences.POPULAR_MOVIES;
-        int queryPage = 1;
+        /* starting page is 1 */
+        loadMovieData(FETCH_MOVIES_LOADER_START_PAGE);
 
-        loadMovieData(queryType, queryPage);
+
+        // register on shared preference change listener to check for preference change
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // unregister on shared preference change listener
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        mPrefUpdate = true;
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        //reload movie data if preferences changed
+        if(mPrefUpdate) {
+            loadMovieData(FETCH_MOVIES_LOADER_START_PAGE);
+            mPrefUpdate = false;
+        }
     }
 
     /**
      * This method will get the user's preferred location for weather, and then tell some
      * background method to get the weather data in the background.
      */
-    private void loadMovieData(int queryType, int queryPage) {
+    private void loadMovieData(int queryPage) {
         showMovieDataView();
 
+        //get
+        String queryType = MoviesPreferences.getPreferredSortOrderKey(this);
         MovieQuery movieQuery = new MovieQuery(queryType, queryPage);
         Bundle movieQueryBundle = new Bundle();
         movieQueryBundle.putParcelable(EXTRA_MOVIE_QUERY, movieQuery);
 
         LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<Movie[]> fetchMoviesLoader = loaderManager.getLoader(FETCH_MOVIES_LOADER);
+        Loader<Movie[]> fetchMoviesLoader = loaderManager.getLoader(FETCH_MOVIES_LOADER_ID);
         if(fetchMoviesLoader == null) {
-            loaderManager.initLoader(FETCH_MOVIES_LOADER, movieQueryBundle, this);
+            loaderManager.initLoader(FETCH_MOVIES_LOADER_ID, movieQueryBundle, this);
         } else {
-            loaderManager.restartLoader(FETCH_MOVIES_LOADER, movieQueryBundle, this);
+            loaderManager.restartLoader(FETCH_MOVIES_LOADER_ID, movieQueryBundle, this);
         }
 
     }
@@ -131,7 +175,7 @@ public class MainActivity extends AppCompatActivity
     private static class FetchMoviesTaskLoader extends AsyncTaskLoader<Movie[]> {
 
         Movie[] mMoviesData = null;
-        Bundle mQueryBundle = null;
+        Bundle mQueryBundle;
 
         private WeakReference<MainActivity> activityReference;
 
@@ -175,10 +219,10 @@ public class MainActivity extends AppCompatActivity
                 return null;
             }
 
-            int queryType = query.type;
+            String queryType = query.sort_order;
             int queryPage = query.page;
 
-            URL moviesRequestUrl = NetworkUtils.buildUrl(queryType, queryPage);
+            URL moviesRequestUrl = NetworkUtils.buildUrl(getContext(), queryType, queryPage);
 
             try {
                 if ( moviesRequestUrl == null ) {
@@ -215,8 +259,17 @@ public class MainActivity extends AppCompatActivity
         if (moviesData != null) {
             showMovieDataView();
             mMoviesAdapter.setMoviesData(moviesData);
+            setActionBarSubtitle();
         } else {
             showErrorMessage();
+        }
+    }
+
+    private void setActionBarSubtitle() {
+        ActionBar actionBar = this.getSupportActionBar();
+        if (actionBar != null) {
+            String subtitleText = MoviesPreferences.getPreferredSortOrderLabel(this);
+            if(subtitleText!=null) { actionBar.setSubtitle(subtitleText); }
         }
     }
 

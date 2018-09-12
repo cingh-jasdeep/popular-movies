@@ -1,26 +1,35 @@
 package example.android.com.popularmovies.data;
 
-import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * query object to query movies from asynctask
- * for type see {@link MoviesPreferences}
+ * query object to query movies from async task loader
  */
 
 public class MovieQuery implements Parcelable {
-    public int type;
+    public String sort_order; // sort order
     public int page; //page number
 
-    public MovieQuery(int type, int page) {
-        this.type = type;
+    protected MovieQuery(Parcel in) {
+        sort_order = in.readString();
+        page = in.readInt();
+    }
+
+    public MovieQuery(String sort_order, int page) {
+        this.sort_order = sort_order;
         this.page = page;
     }
 
-    protected MovieQuery(Parcel in) {
-        type = in.readInt();
-        page = in.readInt();
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(sort_order);
+        dest.writeInt(page);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
     public static final Creator<MovieQuery> CREATOR = new Creator<MovieQuery>() {
@@ -34,15 +43,4 @@ public class MovieQuery implements Parcelable {
             return new MovieQuery[size];
         }
     };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(type);
-        dest.writeInt(page);
-    }
 }
