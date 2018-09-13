@@ -7,6 +7,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
+import example.android.com.popularmovies.BuildConfig;
+
 /**
  * Implement movie object as Parcelable for faster performance
  * see <a href="Parcelable">https://github.com/udacity/android-custom-arrayadapter/tree/parcelable</a>

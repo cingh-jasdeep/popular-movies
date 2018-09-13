@@ -13,6 +13,8 @@ import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 
+import java.util.Date;
+
 import example.android.com.popularmovies.data.Movie;
 import example.android.com.popularmovies.utilities.MovieUtils;
 
@@ -53,7 +55,7 @@ public class MovieDetailsActivity extends AppCompatActivity {
         else {
             mMovie = intent.getParcelableExtra(EXTRA_MOVIE);
             if(mMovie == null) { closeOnError(); }
-            populateUI();
+            else { populateUI(); }
 
         }
 
@@ -84,24 +86,39 @@ public class MovieDetailsActivity extends AppCompatActivity {
     }
 
     private void populateUI() {
-        mMovieTitleTextView.setText(
-                mMovie.getMovieTitle());
+        String movieTitle = mMovie.getMovieTitle();
+        if(movieTitle!=null && !(movieTitle.equals(""))) {
+            mMovieTitleTextView.setText(
+                    movieTitle);
+        }
 
-        Picasso.with(this)
-                .load(mMovie.getMoviePosterUrl())
-                .placeholder(R.mipmap.ic_launcher)
-                .error(R.mipmap.ic_launcher)
-                .into(mMovieDetailPosterImageView);
+        String moviePosterUrl = mMovie.getMoviePosterUrl();
+        if(moviePosterUrl!=null && !(moviePosterUrl.equals(""))) {
+            Picasso.with(this)
+                    .load(mMovie.getMoviePosterUrl())
+                    .placeholder(R.mipmap.ic_launcher)
+                    .error(R.mipmap.ic_launcher)
+                    .into(mMovieDetailPosterImageView);
+        }
 
-        mMovieReleaseDateTextView.setText(
-                MovieUtils.getFormattedDateString( this,
-                        mMovie.getReleaseDate()));
+        Date releaseDate = mMovie.getReleaseDate();
+        if(releaseDate!=null) {
+            mMovieReleaseDateTextView.setText(
+                    MovieUtils.getFormattedDateString( this,
+                            releaseDate));
+        }
 
-        mMovieVoteAverageTextView.setText(
-                MovieUtils.getFormattedVoteString(this,
-                        mMovie.getVoteAverage()));
+        String movieVoteAverage = mMovie.getVoteAverage();
+        if(movieVoteAverage!=null && !(movieVoteAverage.equals(""))) {
+            mMovieVoteAverageTextView.setText(
+                    MovieUtils.getFormattedVoteString(this,
+                            mMovie.getVoteAverage()));
+        }
 
-        mMoviePlotSynopsisTextView.setText(
-                mMovie.getPlotSynopsis());
+        String moviePlotSynopsis = mMovie.getPlotSynopsis();
+        if(moviePlotSynopsis!=null && !(moviePlotSynopsis.equals(""))) {
+            mMoviePlotSynopsisTextView.setText(
+                    moviePlotSynopsis);
+        }
     }
 }

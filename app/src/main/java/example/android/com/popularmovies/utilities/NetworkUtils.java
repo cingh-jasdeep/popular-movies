@@ -34,6 +34,12 @@ import java.util.Scanner;
 
 import example.android.com.popularmovies.R;
 
+import static example.android.com.popularmovies.data.Constant.TMDB_API_KEY;
+import static example.android.com.popularmovies.data.Constant.TMDB_PARAM_API_KEY;
+import static example.android.com.popularmovies.data.Constant.TMDB_PARAM_PAGE;
+import static example.android.com.popularmovies.data.Constant.TMDB_POPULAR_MOVIES_URL;
+import static example.android.com.popularmovies.data.Constant.TMDB_TOP_RATED_MOVIES_URL;
+
 /**
  * These utilities will be used to communicate with the movie servers.
  */
@@ -41,30 +47,6 @@ public final class NetworkUtils {
 
     private static final String TAG = NetworkUtils.class.getSimpleName();
 
-    private static final String POPULAR_MOVIES_URL =
-            "https://api.themoviedb.org/3/movie/popular";
-
-    private static final String TOP_RATED_MOVIES_URL =
-            "https://api.themoviedb.org/3/movie/top_rated";
-
-    /*
-     * API KEY
-     * Please insert your themoviedb.org API key here
-     */
-    private static final String API_KEY =
-            "75a991b5d58647d7767c5139219e2e57";
-
-    /*
-     * API parameter keys
-     * themoviedb.org API parameter keys
-     */
-    final static private String API_KEY_PARAM = "api_key";
-    final static private String PAGE_PARAM = "page";
-
-    /*
-     * some constants for themoviedb.org API
-     */
-    private static final int DEFAULT_PAGE = 1;
 
 
     /**
@@ -78,9 +60,9 @@ public final class NetworkUtils {
         String baseUrl;
 
         if(type.equals(context.getString(R.string.pref_sort_popular))) {
-            baseUrl = POPULAR_MOVIES_URL;
+            baseUrl = TMDB_POPULAR_MOVIES_URL;
         } else if(type.equals(context.getString(R.string.pref_sort_top_rated))) {
-            baseUrl = TOP_RATED_MOVIES_URL;
+            baseUrl = TMDB_TOP_RATED_MOVIES_URL;
         } else {
             Log.d(TAG, "buildUrl() called with: sort_order = [" + type + "], pageNumber = [" + pageNumber + "]");
             return null;
@@ -93,8 +75,8 @@ public final class NetworkUtils {
         }
 
         Uri builtUri = Uri.parse(baseUrl).buildUpon()
-                .appendQueryParameter(API_KEY_PARAM, API_KEY)
-                .appendQueryParameter(PAGE_PARAM, Integer.toString(pageNumber))
+                .appendQueryParameter(TMDB_PARAM_API_KEY, TMDB_API_KEY)
+                .appendQueryParameter(TMDB_PARAM_PAGE, Integer.toString(pageNumber))
                 .build();
 
         URL url = null;

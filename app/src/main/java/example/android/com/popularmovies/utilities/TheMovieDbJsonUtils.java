@@ -31,6 +31,13 @@ import java.util.Date;
 
 import example.android.com.popularmovies.data.Movie;
 
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_PLOT_SYNOPSIS;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_POSTER_PATH;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RELEASE_DATE;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RESULTS;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_TITLE;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_VOTE_AVG;
+
 /**
  * Utility functions to handle TheMovieDb JSON data.
  */
@@ -42,34 +49,10 @@ public final class TheMovieDbJsonUtils {
      * @param context         An application context, such as a service or activity context.
      * @param movieDbJsonStr The JSON to parse into Movie object array.
      *
-     * @return An array of ContentValues parsed from the JSON.
+     * @return An array of Movie objects parsed from the JSON.
      */
     public static Movie[] getMovieDataFromJson(Context context, String movieDbJsonStr)
         throws JSONException {
-
-        /* Movie information.
-        *  Note: Each movie's info is an element of the "results" array */
-        final String TMDB_RESULTS = "results";
-
-        /* Properties to read from one movie's JSON object */
-
-        /* Movie title */
-        final String TMDB_TITLE = "title";
-
-        /* Movie release date
-        *  Note: return format is yyyy-mm-dd */
-        final String TMDB_RELEASE_DATE = "release_date";
-
-        /* Movie poster url
-        *  Note: will return partial url, for eg. "/uC6TTUhPpQCmgldGyYveKRAu8JN.jpg" */
-        final String TMDB_POSTER_PATH = "poster_path";
-
-        /* Movie vote average
-        *  Note: will return vote average out of 10, for eg. "9.3" */
-        final String TMDB_VOTE_AVG = "vote_average";
-
-        /* Movie plot synopsis */
-        final String TMDB_PLOT_SYNOPSIS = "overview";
 
 
         /* Movie array to hold each movie's information */
@@ -94,7 +77,7 @@ public final class TheMovieDbJsonUtils {
 //            }
 //        }
 
-        JSONArray movieArray = movieDbJson.optJSONArray(TMDB_RESULTS);
+        JSONArray movieArray = movieDbJson.optJSONArray(TMDB_JSON_RESULTS);
 
         parsedMovieData = new Movie[movieArray.length()];
 
@@ -110,17 +93,17 @@ public final class TheMovieDbJsonUtils {
             /* Get the JSON object representing the day */
             JSONObject movieInfo = movieArray.optJSONObject(i);
 
-            movieTitle = movieInfo.optString(TMDB_TITLE);
+            movieTitle = movieInfo.optString(TMDB_JSON_TITLE);
 
             releaseDate = MovieUtils.getDate(context,
-                    movieInfo.optString(TMDB_RELEASE_DATE));
+                    movieInfo.optString(TMDB_JSON_RELEASE_DATE));
 
             moviePosterUrl = PosterHelper
-                    .buildPosterUrl(movieInfo.optString(TMDB_POSTER_PATH));
+                    .buildPosterUrl(movieInfo.optString(TMDB_JSON_POSTER_PATH));
 
-            voteAverage = movieInfo.optString(TMDB_VOTE_AVG);
+            voteAverage = movieInfo.optString(TMDB_JSON_VOTE_AVG);
 
-            plotSynopsis = movieInfo.optString(TMDB_PLOT_SYNOPSIS);
+            plotSynopsis = movieInfo.optString(TMDB_JSON_PLOT_SYNOPSIS);
 
             parsedMovieData[i] = new Movie(movieTitle, releaseDate, moviePosterUrl,
                     voteAverage, plotSynopsis);
