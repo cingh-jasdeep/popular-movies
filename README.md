@@ -1,6 +1,4 @@
 ## Waheguru Ja Khalsa Waheguru Ji Ki Fateh
----------------
-
 
 # popular-movies
 
