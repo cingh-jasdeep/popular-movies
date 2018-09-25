@@ -62,6 +62,9 @@ public class Constant {
 
     /* Properties to read from one movie's JSON object */
 
+    /* Movie id */
+    public static final String TMDB_JSON_ID = "id";
+
     /* Movie title */
     public static final String TMDB_JSON_TITLE = "title";
 

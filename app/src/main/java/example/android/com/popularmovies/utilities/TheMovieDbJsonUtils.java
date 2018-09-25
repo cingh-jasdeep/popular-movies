@@ -32,6 +32,7 @@ import java.util.Date;
 
 import example.android.com.popularmovies.data.Movie;
 
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_ID;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_PLOT_SYNOPSIS;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_POSTER_PATH;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RELEASE_DATE;
@@ -77,6 +78,7 @@ public final class TheMovieDbJsonUtils {
         for (int i = 0; i < movieArray.length(); i++) {
 
             /* These are the values that will be collected */
+            int movieId;
             String movieTitle;
             Date releaseDate; //parse in date object
             String moviePosterUrl; //full url of movie poster
@@ -85,6 +87,8 @@ public final class TheMovieDbJsonUtils {
 
             /* Get the JSON object representing the day */
             JSONObject movieInfo = movieArray.optJSONObject(i);
+
+            movieId = movieInfo.optInt(TMDB_JSON_ID);
 
             movieTitle = movieInfo.optString(TMDB_JSON_TITLE);
 
@@ -98,7 +102,7 @@ public final class TheMovieDbJsonUtils {
 
             plotSynopsis = movieInfo.optString(TMDB_JSON_PLOT_SYNOPSIS);
 
-            parsedMovieData[i] = new Movie(movieTitle, releaseDate, moviePosterUrl,
+            parsedMovieData[i] = new Movie(movieId, movieTitle, releaseDate, moviePosterUrl,
                     voteAverage, plotSynopsis);
         }
 

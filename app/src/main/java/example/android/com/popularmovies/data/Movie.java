@@ -15,14 +15,17 @@ import example.android.com.popularmovies.BuildConfig;
  */
 
 public class Movie implements Parcelable {
+
+    private int movieId;
     private String movieTitle;
     private Date releaseDate; //parse in date object
     private String moviePosterUrl; //full url of movie poster
     private String voteAverage;
     private String plotSynopsis;
 
-    public Movie(String movieTitle, Date releaseDate, String moviePosterUrl,
+    public Movie(int movieId, String movieTitle, Date releaseDate, String moviePosterUrl,
                  String voteAverage, String plotSynopsis) {
+        this.movieId = movieId;
         this.movieTitle = movieTitle;
         this.releaseDate = releaseDate;
         this.moviePosterUrl = moviePosterUrl;
@@ -31,11 +34,12 @@ public class Movie implements Parcelable {
     }
 
     public String toString() {
-        return movieTitle + "--" + getSimpleDateString(releaseDate)
+        return movieId + "--" + movieTitle + "--" + getSimpleDateString(releaseDate)
             + "--" + moviePosterUrl + "--" + voteAverage + "--" + plotSynopsis;
     }
 
     public Movie(Parcel in) {
+        movieId = in.readInt();
         movieTitle = in.readString();
         releaseDate = new Date(in.readLong());
         moviePosterUrl = in.readString();
@@ -46,6 +50,7 @@ public class Movie implements Parcelable {
     // online reference: https://stackoverflow.com/questions/21017404/reading-and-writing-java-util-date-from-parcelable-class
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeInt(movieId);
         dest.writeString(movieTitle);
         dest.writeLong(releaseDate.getTime());
         dest.writeString(moviePosterUrl);
@@ -109,6 +114,10 @@ public class Movie implements Parcelable {
     public void setPlotSynopsis(String plotSynopsis) {
         this.plotSynopsis = plotSynopsis;
     }
+
+    public int getMovieId() { return movieId; }
+
+    public void setMovieId(int movieId) { this.movieId = movieId; }
 
     //reference: http://tutorials.jenkov.com/java-internationalization/simpledateformat.html
     private String getSimpleDateString (Date date) {
