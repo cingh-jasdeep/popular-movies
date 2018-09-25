@@ -23,17 +23,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <GridView
-        xmlns:android="http://schemas.android.com/apk/res/android"
+    <!--using autofit recycler view from https://github.com/chiuki/android-recyclerview-->
+    <example.android.com.popularmovies.utilities.AutofitRecyclerView
+        android:id="@+id/rv_movies"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:columnWidth="@dimen/poster_width"
-        android:numColumns="auto_fit"
-        android:verticalSpacing="0dp"
-        android:horizontalSpacing="0dp"
-        android:stretchMode="columnWidth"
-        android:id="@+id/gv_movies">
-    </GridView>
+        />
 
     <TextView
         android:id="@+id/tv_error_message_display"

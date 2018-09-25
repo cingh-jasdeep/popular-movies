@@ -48,4 +48,13 @@
     <!-- Default value in SharedPreferences sort option -->
     <string name="pref_sort_default" translatable="false">@string/pref_sort_popular</string>
 
+
+    <!-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      - Used for Accessibility purposes (Accessibility == a11y)                            -
+      -                                                                                    -
+      - Fun Fact: Accessibility is abbreviated a11y because accessibility starts with 'a', -
+      - followed by 11 letters, and then a 'y'. It is pronounced alley, like an alley cat. -
+      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
+    <string name="a11y_poster">Forecast: <xliff:g id="movie_name">%1$s</xliff:g></string>
+
 </resources>

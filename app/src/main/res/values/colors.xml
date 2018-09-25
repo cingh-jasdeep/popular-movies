@@ -5,4 +5,6 @@
     <color name="colorPrimaryDark">#000000</color>
     <color name="colorAccent">#008B7D</color>
     <color name="white">#FFFFFF</color>
+
+    <color name="activated">#40008b7d</color>
 </resources>

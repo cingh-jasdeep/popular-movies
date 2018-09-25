@@ -32,12 +32,13 @@ import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -47,16 +48,17 @@ import org.json.JSONException;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.util.ArrayList;
 
 import example.android.com.popularmovies.data.Movie;
 import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
+import example.android.com.popularmovies.utilities.MoviesAdapter;
 import example.android.com.popularmovies.utilities.NetworkUtils;
+import example.android.com.popularmovies.utilities.PosterHelper;
 import example.android.com.popularmovies.utilities.TheMovieDbJsonUtils;
 
 public class MainActivity extends AppCompatActivity
-        implements AdapterView.OnItemClickListener,
+        implements MoviesAdapter.MoviesAdapterOnClickHandler,
         LoaderManager.LoaderCallbacks<Movie[]>,
         SharedPreferences.OnSharedPreferenceChangeListener{
 
@@ -69,8 +71,7 @@ public class MainActivity extends AppCompatActivity
     private static final int FETCH_MOVIES_LOADER_START_PAGE = 1;
 
 
-
-    private GridView mGridView;
+    private RecyclerView mRecyclerView;
     private MoviesAdapter mMoviesAdapter;
 
     private TextView mErrorMessageDisplay;
@@ -90,13 +91,11 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mGridView = findViewById(R.id.gv_movies);
+        mRecyclerView = findViewById(R.id.rv_movies);
+        mMoviesAdapter = new MoviesAdapter(this, this);
+        mRecyclerView.setHasFixedSize(true);
+        mRecyclerView.setAdapter(mMoviesAdapter);
 
-        mMoviesAdapter = new MoviesAdapter(this, new ArrayList<Movie>());
-
-        mGridView.setAdapter(mMoviesAdapter);
-
-        mGridView.setOnItemClickListener(this);
 
         /* This TextView is used to display errors and will be hidden if there are no errors */
         mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
@@ -144,8 +143,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * This method will get the user's preferred location for weather, and then tell some
-     * background method to get the weather data in the background.
+     * This method will get the user's preferred sort order , and then tell some
+     * background method to get the movie data in the background.
      */
     private void loadMovieData(int queryPage) {
         showMovieDataView();
@@ -287,7 +286,7 @@ public class MainActivity extends AppCompatActivity
         /* First, make sure the error is invisible */
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
         /* Then, make sure the weather data is visible */
-        mGridView.setVisibility(View.VISIBLE);
+        mRecyclerView.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -295,28 +294,9 @@ public class MainActivity extends AppCompatActivity
      */
     private void showErrorMessage() {
         /* First, hide the currently visible data */
-        mGridView.setVisibility(View.INVISIBLE);
+        mRecyclerView.setVisibility(View.INVISIBLE);
         /* Then, show the error */
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
-    }
-
-    /**
-     * This method is overridden by our MainActivity class in order to handle GridView item
-     * clicks.
-     */
-    @Override
-    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Movie movie = (Movie) parent.getItemAtPosition(position);
-        Context context = this;
-
-        Class destinationClass = MovieDetailsActivity.class;
-        Intent intent = new Intent(context, destinationClass);
-
-        /* Put movie object into intent extra
-         * see https://www.techjini.com/blog/passing-objects-via-intent-in-android/
-         */
-        intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
-        startActivity(intent);
     }
 
     @Override
@@ -347,6 +327,24 @@ public class MainActivity extends AppCompatActivity
 //        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    /**
+     * This method is overridden by our MainActivity class in order to handle RecyclerView item
+     * clicks.
+     */
+    @Override
+    public void onClick(Movie movie) {
+        Context context = this;
+
+        Class destinationClass = MovieDetailsActivity.class;
+        Intent intent = new Intent(context, destinationClass);
+
+        /* Put movie object into intent extra
+         * see https://www.techjini.com/blog/passing-objects-via-intent-in-android/
+         */
+        intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
+        startActivity(intent);
     }
 
 

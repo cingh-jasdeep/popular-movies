@@ -30,6 +30,10 @@ dependencies {
     implementation 'com.android.support:cardview-v7:27.1.1'
     implementation 'com.android.support:preference-v7:27.1.1'
 
+    // used for adjustviewbounds for imageview in api level below 17
+    // https://inthecheesefactory.com/blog/correct-imageview-adjustviewbounds-with-adjustable-imageview/en
+    implementation 'com.inthecheesefactory.thecheeselibrary:adjustable-imageview:1.0.0'
+
     implementation 'com.squareup.picasso:picasso:2.5.2'
 
     testImplementation 'junit:junit:4.12'

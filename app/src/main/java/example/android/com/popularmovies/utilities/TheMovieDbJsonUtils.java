@@ -22,6 +22,7 @@
 package example.android.com.popularmovies.utilities;
 
 import android.content.Context;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,12 +38,14 @@ import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RELEASE_
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RESULTS;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_TITLE;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_VOTE_AVG;
+import static example.android.com.popularmovies.data.Constant.TMDB_STATUS_MESSAGE;
 
 /**
  * Utility functions to handle TheMovieDb JSON data.
  */
 public final class TheMovieDbJsonUtils {
 
+    private static final String TAG = TheMovieDbJsonUtils.class.getSimpleName();
     /**
      * Parse the JSON and convert it into Movie objects array.
      *
@@ -61,21 +64,11 @@ public final class TheMovieDbJsonUtils {
         JSONObject movieDbJson = new JSONObject(movieDbJsonStr);
 
         /* Is there an error? */
-        //TODO if there is an error in parsed json detect and throw error here
-//        if (forecastJson.has(OWM_MESSAGE_CODE)) {
-//            int errorCode = forecastJson.getInt(OWM_MESSAGE_CODE);
-//
-//            switch (errorCode) {
-//                case HttpURLConnection.HTTP_OK:
-//                    break;
-//                case HttpURLConnection.HTTP_NOT_FOUND:
-//                    /* Location invalid */
-//                    return null;
-//                default:
-//                    /* Server probably down */
-//                    return null;
-//            }
-//        }
+        if (movieDbJson.has(TMDB_STATUS_MESSAGE)) {
+            String responseErrorMessage = movieDbJson.optString(TMDB_STATUS_MESSAGE);
+            Log.i(TAG, "getMovieDataFromJson: "+responseErrorMessage);
+            return null;
+        }
 
         JSONArray movieArray = movieDbJson.optJSONArray(TMDB_JSON_RESULTS);
 

@@ -53,6 +53,8 @@ public class Constant {
 
     /* themoviedb.org API json data keys */
 
+    public static final String TMDB_STATUS_MESSAGE = "status_message";
+
     /* Movie information.
      *  Note: Each movie's info is an element of the "results" array */
     public static final String TMDB_JSON_RESULTS = "results";
