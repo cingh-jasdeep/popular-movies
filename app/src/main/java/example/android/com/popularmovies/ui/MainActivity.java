@@ -18,54 +18,46 @@
  * File copied from Sunshine project "S04.03-Solution-AddMapAndSharing"
  * and modified according to needs of this project
  */
-package example.android.com.popularmovies;
+package example.android.com.popularmovies.ui;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.AsyncTaskLoader;
-import android.support.v4.content.Loader;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 
-import org.json.JSONException;
+import com.facebook.stetho.Stetho;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
-import java.net.URL;
+import java.util.List;
 
-import example.android.com.popularmovies.data.Movie;
-import example.android.com.popularmovies.data.MovieQuery;
+import example.android.com.popularmovies.R;
+import example.android.com.popularmovies.db.MovieEntry;
 import example.android.com.popularmovies.data.MoviesPreferences;
+import example.android.com.popularmovies.sync.MovieSyncUtilities;
+import example.android.com.popularmovies.sync.MoviesSyncTasks;
 import example.android.com.popularmovies.utilities.MoviesAdapter;
-import example.android.com.popularmovies.utilities.NetworkUtils;
-import example.android.com.popularmovies.utilities.PosterHelper;
-import example.android.com.popularmovies.utilities.TheMovieDbJsonUtils;
 
 public class MainActivity extends AppCompatActivity
         implements MoviesAdapter.MoviesAdapterOnClickHandler,
-        LoaderManager.LoaderCallbacks<Movie[]>,
-        SharedPreferences.OnSharedPreferenceChangeListener{
+        SharedPreferences.OnSharedPreferenceChangeListener,
+        SwipeRefreshLayout.OnRefreshListener,
+        Observer<List<MovieEntry>>{
 
     private static final String TAG = MainActivity.class.getSimpleName();
-
-    private static final int FETCH_MOVIES_LOADER_ID = 22;
-    private static final String EXTRA_MOVIE_QUERY = "movie_extra";
 
     // starting page to fetch movies from the api
     private static final int FETCH_MOVIES_LOADER_START_PAGE = 1;
@@ -76,19 +68,27 @@ public class MainActivity extends AppCompatActivity
 
     private TextView mErrorMessageDisplay;
 
-    private ProgressBar mLoadingIndicator;
+//    private ProgressBar mLoadingIndicator;
+
+    private SwipeRefreshLayout mSwipeRefreshLayout;
+
+    private MainViewModel mViewModel;
 
     // flag to indicate a change in user preferences
-    private static boolean mPrefUpdate = false;
+    private static boolean mSortPrefUpdate = false;
 
     // variable to store current page fetched from api
     // i will use later to make infinite scroll
     private static int mCurrPage = 1;
 
+    private MenuItem mRefreshMenuItem;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Stetho.initializeWithDefaults(this);
+
         setContentView(R.layout.activity_main);
 
         mRecyclerView = findViewById(R.id.rv_movies);
@@ -104,18 +104,19 @@ public class MainActivity extends AppCompatActivity
          * The ProgressBar that will indicate to the user that we are loading data. It will be
          * hidden when no data is loading.
          */
-        mLoadingIndicator = findViewById(R.id.pb_loading_indicator);
+        mSwipeRefreshLayout = findViewById(R.id.srl_rv_movies);
 
         /* Once all of our views are setup, we can load the movie data. */
-
-
         /* starting page is 1 */
-        loadMovieData(FETCH_MOVIES_LOADER_START_PAGE);
-
-
+        //send out intent service to update databse using given preferences
         // register on shared preference change listener to check for preference change
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this);
+        mSwipeRefreshLayout.setOnRefreshListener(this);
+
+        mSwipeRefreshLayout.setRefreshing(true);
+        loadMovieData(false, false);
+
     }
 
     @Override
@@ -129,138 +130,76 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        mPrefUpdate = true;
+        if(key.equals(getString(R.string.pref_sort_key))) {
+            mSortPrefUpdate = true;
+        }
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        //reload movie data if preferences changed
-        if(mPrefUpdate) {
-            loadMovieData(FETCH_MOVIES_LOADER_START_PAGE);
-            mPrefUpdate = false;
+        if(mSortPrefUpdate) {
+            mSortPrefUpdate = false;
+            mSwipeRefreshLayout.setRefreshing(true);
+            showRefreshUi(!MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext()));
+            loadMovieData(false, true);
         }
+    }
+
+
+    private void showRefreshUi(boolean bool) {
+        mSwipeRefreshLayout.setEnabled(bool);
+        if(mRefreshMenuItem!=null) mRefreshMenuItem.setEnabled(bool);
     }
 
     /**
      * This method will get the user's preferred sort order , and then tell some
      * background method to get the movie data in the background.
      */
-    private void loadMovieData(int queryPage) {
+    private void loadMovieData(boolean forceUpdate, boolean prefChanged) {
+
+        if(forceUpdate) {
+            MovieSyncUtilities.startImmediateSync(this, MoviesSyncTasks.ACTION_UPDATE_ALL_MOVIES);
+        } else {
+            MovieSyncUtilities.doNetworkUpdate(this, MoviesSyncTasks.ACTION_UPDATE_ALL_MOVIES);
+        }
+
         showMovieDataView();
 
-        //get
-        String queryType = MoviesPreferences.getPreferredSortOrderKey(this);
-        MovieQuery movieQuery = new MovieQuery(queryType, queryPage);
-        Bundle movieQueryBundle = new Bundle();
-        movieQueryBundle.putParcelable(EXTRA_MOVIE_QUERY, movieQuery);
-
-        LoaderManager loaderManager = getSupportLoaderManager();
-        Loader<Movie[]> fetchMoviesLoader = loaderManager.getLoader(FETCH_MOVIES_LOADER_ID);
-        if(fetchMoviesLoader == null) {
-            loaderManager.initLoader(FETCH_MOVIES_LOADER_ID, movieQueryBundle, this);
-        } else {
-            loaderManager.restartLoader(FETCH_MOVIES_LOADER_ID, movieQueryBundle, this);
-        }
+        setupViewModel(prefChanged);
 
     }
 
-    @NonNull
-    @Override
-    public Loader<Movie[]> onCreateLoader(int i, @Nullable Bundle bundle) {
-        return new FetchMoviesTaskLoader(this, bundle);
+    private void setupViewModel(boolean prefChanged) {
+        mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
+
+        // reinitialize data on change in preferences
+        if(prefChanged) {
+            mViewModel.updateSortedResults(getApplicationContext());
+        }
+
+        mViewModel.displayMovies.observe(this, this);
     }
 
-    private static class FetchMoviesTaskLoader extends AsyncTaskLoader<Movie[]> {
-
-        Movie[] mMoviesData = null;
-        Bundle mQueryBundle;
-
-        private WeakReference<MainActivity> activityReference;
-
-        // only retain a weak reference to the activity
-        FetchMoviesTaskLoader(MainActivity context, Bundle bundle) {
-            super(context);
-            activityReference = new WeakReference<>(context);
-            mQueryBundle = bundle;
-        }
-
-        @Override
-        protected void onStartLoading() {
-            super.onStartLoading();
-
-            if(mQueryBundle == null) {
-                return;
-            }
-
-            // get a reference to the activity if it is still there
-            MainActivity activity = activityReference.get();
-            if (activity == null || activity.isFinishing()) return;
-
-            /* show loading before fetching movie details from network */
-            activity.mLoadingIndicator.setVisibility(View.VISIBLE);
-
-            /* if there is cached data return that instead */
-            if(mMoviesData != null) {
-                deliverResult(mMoviesData);
-            }
-            forceLoad();
-
-        }
-
-        @Nullable
-        @Override
-        public Movie[] loadInBackground() {
-            MovieQuery query = mQueryBundle.getParcelable(EXTRA_MOVIE_QUERY);
-
-            /* If there's no query, there's nothing to look up. */
-            if (query == null) {
-                return null;
-            }
-
-            String queryType = query.sort_order;
-            int queryPage = query.page;
-
-            URL moviesRequestUrl = NetworkUtils.buildUrl(getContext(), queryType, queryPage);
-
-            try {
-                if ( moviesRequestUrl == null ) {
-                    return null;
-                }
-
-                String jsonMovieResponse = NetworkUtils
-                        .getResponseFromHttpUrl(moviesRequestUrl);
-
-                return TheMovieDbJsonUtils
-                        .getMovieDataFromJson(getContext(),
-                                jsonMovieResponse);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-                return null;
-            } catch (JSONException e) {
-                e.printStackTrace();
-                return null;
-            }
-        }
-
-        @Override
-        public void deliverResult(@Nullable Movie[] data) {
-            mMoviesData = data;
-            super.deliverResult(data);
-        }
-    }
 
     @Override
-    public void onLoadFinished(@NonNull Loader<Movie[]> loader, Movie[] moviesData) {
-        /* hide loading after network request */
-        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if (moviesData != null) {
+    public void onChanged(@Nullable List<MovieEntry> movieEntryList) {
+        Log.d(TAG, "Updating movies display from LiveData in ViewModel");
+        showMoviesData(movieEntryList);
+    }
+
+    public void showMoviesData(List<MovieEntry> moviesData) {
+        /* hide loading after change in data */
+//        mLoadingIndicator.setVisibility(View.INVISIBLE);
+        if(mSwipeRefreshLayout.isRefreshing()) {
+            mSwipeRefreshLayout.setRefreshing(false);
+        }
+        setActionBarSubtitle();
+        if (moviesData != null && moviesData.size() !=0 ) {
             showMovieDataView();
             mMoviesAdapter.setMoviesData(moviesData);
-            setActionBarSubtitle();
         } else {
-            showErrorMessage();
+            showMessage(getString(R.string.message_no_show));
         }
     }
 
@@ -270,11 +209,6 @@ public class MainActivity extends AppCompatActivity
             String subtitleText = MoviesPreferences.getPreferredSortOrderLabel(this);
             if(subtitleText!=null) { actionBar.setSubtitle(subtitleText); }
         }
-    }
-
-    @Override
-    public void onLoaderReset(@NonNull Loader<Movie[]> loader) {
-
     }
 
 
@@ -299,6 +233,17 @@ public class MainActivity extends AppCompatActivity
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
+    /**
+     * This method will make the error message visible and hide the movie grid.
+     */
+    private void showMessage(String message) {
+        /* First, hide the currently visible data */
+        mRecyclerView.setVisibility(View.INVISIBLE);
+        /* Then, show the error */
+        mErrorMessageDisplay.setVisibility(View.VISIBLE);
+        mErrorMessageDisplay.setText(message);
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         /* Use AppCompatActivity's method getMenuInflater to get a handle on the menu inflater */
@@ -306,6 +251,7 @@ public class MainActivity extends AppCompatActivity
         /* Use the inflater's inflate method to inflate our menu layout to this menu */
         inflater.inflate(R.menu.main, menu);
         /* Return true so that the menu is displayed in the Toolbar */
+        mRefreshMenuItem = menu.findItem(R.id.action_refresh);
         return true;
     }
 
@@ -319,14 +265,28 @@ public class MainActivity extends AppCompatActivity
             return true;
         }
 
+        if (id == R.id.action_refresh) {
 
-//        if (id == R.id.action_refresh) {
-//            mMoviesAdapter.setMoviesData(null);
-//            loadMovieData();
-//            return true;
-//        }
+            if(!MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext())) {
+                mSwipeRefreshLayout.setRefreshing(true);
+                loadMovieData(true, false);
+            }
+            //don't do anything if favorite sort order
+
+            return true;
+        }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onRefresh() {
+        if(MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext())) {
+            //no need to refresh favorite movies
+            mSwipeRefreshLayout.setRefreshing(false);
+        } else {
+            loadMovieData(true, false);
+        }
     }
 
     /**
@@ -334,7 +294,7 @@ public class MainActivity extends AppCompatActivity
      * clicks.
      */
     @Override
-    public void onClick(Movie movie) {
+    public void onClick(MovieEntry movie) {
         Context context = this;
 
         Class destinationClass = MovieDetailsActivity.class;
@@ -346,7 +306,5 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
         startActivity(intent);
     }
-
-
 
 }

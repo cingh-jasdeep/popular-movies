@@ -1,9 +1,11 @@
-package example.android.com.popularmovies;
+package example.android.com.popularmovies.ui;
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.MenuItem;
+
+import example.android.com.popularmovies.R;
 
 public class SettingsActivity extends AppCompatActivity {
 

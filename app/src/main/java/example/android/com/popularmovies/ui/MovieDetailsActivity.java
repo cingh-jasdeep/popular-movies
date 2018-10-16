@@ -1,4 +1,4 @@
-package example.android.com.popularmovies;
+package example.android.com.popularmovies.ui;
 
 import android.content.Intent;
 import android.support.v4.app.NavUtils;
@@ -15,17 +15,18 @@ import com.squareup.picasso.Picasso;
 
 import java.util.Date;
 
-import example.android.com.popularmovies.data.Movie;
+import example.android.com.popularmovies.R;
+import example.android.com.popularmovies.db.MovieEntry;
 import example.android.com.popularmovies.utilities.MovieUtils;
 
 public class MovieDetailsActivity extends AppCompatActivity {
 
     public static final String EXTRA_MOVIE = "extra_movie";
 
-    /* Movie object to store movie details */
-    private Movie mMovie;
+    /* MovieEntry object to store movie details */
+    private MovieEntry mMovie;
 
-    /* Movie Details Ui variables */
+    /* MovieEntry Details Ui variables */
     private TextView mMovieTitleTextView;
     private ImageView mMovieDetailPosterImageView;
     private TextView mMovieReleaseDateTextView;
@@ -108,11 +109,11 @@ public class MovieDetailsActivity extends AppCompatActivity {
                             releaseDate));
         }
 
-        String movieVoteAverage = mMovie.getVoteAverage();
+        String movieVoteAverage = Double.toString(mMovie.getVoteAverage());
         if(movieVoteAverage!=null && !(movieVoteAverage.equals(""))) {
             mMovieVoteAverageTextView.setText(
                     MovieUtils.getFormattedVoteString(this,
-                            mMovie.getVoteAverage()));
+                            movieVoteAverage));
         }
 
         String moviePlotSynopsis = mMovie.getPlotSynopsis();

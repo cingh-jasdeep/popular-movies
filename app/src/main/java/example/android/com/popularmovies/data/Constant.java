@@ -32,7 +32,21 @@ public class Constant {
      */
     public static final int TMDB_DEFAULT_PAGE = 1;
 
+    /*
+     * flags to store movie tag
+     */
+    public final static int MOVIE_ATTR_FLAG_TRUE = 1;
+    public final static int MOVIE_ATTR_FLAG_FALSE = 0;
 
+    /*
+     * constants used by database
+     */
+    public final static String APP_DATABASE_NAME = "pop_movies";
+
+    /*
+     * constants used by network sync
+     */
+    public final static long NETWORK_UPDATE_THRESHOLD_6_HOURS = 6;
 
     /*
      * themoviedb.org API poster related constants
@@ -55,32 +69,35 @@ public class Constant {
 
     public static final String TMDB_STATUS_MESSAGE = "status_message";
 
-    /* Movie information.
+    /* MovieEntry information.
      *  Note: Each movie's info is an element of the "results" array */
     public static final String TMDB_JSON_RESULTS = "results";
 
 
     /* Properties to read from one movie's JSON object */
 
-    /* Movie id */
+    /* MovieEntry id */
     public static final String TMDB_JSON_ID = "id";
 
-    /* Movie title */
+    /* MovieEntry title */
     public static final String TMDB_JSON_TITLE = "title";
 
-    /* Movie release date
+    /* MovieEntry release date
      *  Note: return format is yyyy-mm-dd */
     public static final String TMDB_JSON_RELEASE_DATE = "release_date";
 
-    /* Movie poster url
+    /* MovieEntry poster url
      *  Note: will return partial url, for eg. "/uC6TTUhPpQCmgldGyYveKRAu8JN.jpg" */
     public static final String TMDB_JSON_POSTER_PATH = "poster_path";
 
-    /* Movie vote average
+    /* MovieEntry vote average
      *  Note: will return vote average out of 10, for eg. "9.3" */
     public static final String TMDB_JSON_VOTE_AVG = "vote_average";
 
-    /* Movie plot synopsis */
+    /* MovieEntry plot synopsis */
     public static final String TMDB_JSON_PLOT_SYNOPSIS = "overview";
+
+    /* MovieEntry popularity */
+    public static final String TMDB_JSON_POPULARITY_RATING = "popularity";
 
 }

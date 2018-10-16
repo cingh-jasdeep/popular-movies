@@ -19,7 +19,7 @@
  * and modified according to needs of this project
  */
 
-package example.android.com.popularmovies.utilities;
+package example.android.com.popularmovies.api;
 
 import android.content.Context;
 import android.util.Log;
@@ -30,10 +30,15 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-import example.android.com.popularmovies.data.Movie;
+import example.android.com.popularmovies.R;
+import example.android.com.popularmovies.db.MovieEntry;
+import example.android.com.popularmovies.utilities.MovieUtils;
+import example.android.com.popularmovies.utilities.PosterHelper;
 
+import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_TRUE;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_ID;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_PLOT_SYNOPSIS;
+import static example.android.com.popularmovies.data.Constant.TMDB_JSON_POPULARITY_RATING;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_POSTER_PATH;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RELEASE_DATE;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RESULTS;
@@ -48,32 +53,33 @@ public final class TheMovieDbJsonUtils {
 
     private static final String TAG = TheMovieDbJsonUtils.class.getSimpleName();
     /**
-     * Parse the JSON and convert it into Movie objects array.
+     * Parse the JSON and convert it into MovieEntry objects array.
      *
      * @param context         An application context, such as a service or activity context.
-     * @param movieDbJsonStr The JSON to parse into Movie object array.
+     * @param movieDbJsonStr The JSON to parse into MovieEntry object array.
      *
-     * @return An array of Movie objects parsed from the JSON.
+     * @return An array of MovieEntry objects parsed from the JSON.
      */
-    public static Movie[] getMovieDataFromJson(Context context, String movieDbJsonStr)
+    public static MovieEntry[] getMovieDataFromJson(Context context, String movieDbJsonStr,
+                                                    String queryType)
         throws JSONException {
 
 
-        /* Movie array to hold each movie's information */
-        Movie[] parsedMovieData;
+        /* MovieEntry array to hold each movie's information */
+        MovieEntry[] parsedMovieData;
 
         JSONObject movieDbJson = new JSONObject(movieDbJsonStr);
 
         /* Is there an error? */
         if (movieDbJson.has(TMDB_STATUS_MESSAGE)) {
-            String responseErrorMessage = movieDbJson.optString(TMDB_STATUS_MESSAGE);
+            String responseErrorMessage = movieDbJson.optString(TMDB_STATUS_MESSAGE).trim();
             Log.i(TAG, "getMovieDataFromJson: "+responseErrorMessage);
             return null;
         }
 
         JSONArray movieArray = movieDbJson.optJSONArray(TMDB_JSON_RESULTS);
 
-        parsedMovieData = new Movie[movieArray.length()];
+        parsedMovieData = new MovieEntry[movieArray.length()];
 
         for (int i = 0; i < movieArray.length(); i++) {
 
@@ -82,28 +88,45 @@ public final class TheMovieDbJsonUtils {
             String movieTitle;
             Date releaseDate; //parse in date object
             String moviePosterUrl; //full url of movie poster
-            String voteAverage;
+            double voteAverage;
             String plotSynopsis;
+            double popularityRating;
 
             /* Get the JSON object representing the day */
             JSONObject movieInfo = movieArray.optJSONObject(i);
 
             movieId = movieInfo.optInt(TMDB_JSON_ID);
 
-            movieTitle = movieInfo.optString(TMDB_JSON_TITLE);
+            movieTitle = movieInfo.optString(TMDB_JSON_TITLE).trim();
 
             releaseDate = MovieUtils.getDate(context,
-                    movieInfo.optString(TMDB_JSON_RELEASE_DATE));
+                    movieInfo.optString(TMDB_JSON_RELEASE_DATE).trim());
 
             moviePosterUrl = PosterHelper
-                    .buildPosterUrl(movieInfo.optString(TMDB_JSON_POSTER_PATH));
+                    .buildPosterUrl(movieInfo.optString(TMDB_JSON_POSTER_PATH).trim());
 
-            voteAverage = movieInfo.optString(TMDB_JSON_VOTE_AVG);
+            voteAverage = movieInfo.optDouble(TMDB_JSON_VOTE_AVG);
 
-            plotSynopsis = movieInfo.optString(TMDB_JSON_PLOT_SYNOPSIS);
+            plotSynopsis = movieInfo.optString(TMDB_JSON_PLOT_SYNOPSIS).trim();
 
-            parsedMovieData[i] = new Movie(movieId, movieTitle, releaseDate, moviePosterUrl,
-                    voteAverage, plotSynopsis);
+            popularityRating = movieInfo.optDouble(TMDB_JSON_POPULARITY_RATING);
+
+            parsedMovieData[i] = new MovieEntry(movieId, movieTitle, releaseDate, moviePosterUrl,
+                    voteAverage, plotSynopsis, popularityRating);
+
+
+            //add query attributes to the movieEntry object
+
+            String popularQuery = context.getString(R.string.pref_sort_popular);
+            String topRatedQuery = context.getString(R.string.pref_sort_top_rated);
+
+            //update sort member variables in each movieEntry object
+            if(queryType.equals(popularQuery)) {
+                parsedMovieData[i].setIsPopular(MOVIE_ATTR_FLAG_TRUE);
+            } else if(queryType.equals(topRatedQuery)) {
+                parsedMovieData[i].setIsTopRated(MOVIE_ATTR_FLAG_TRUE);
+            }
+
         }
 
         return parsedMovieData;

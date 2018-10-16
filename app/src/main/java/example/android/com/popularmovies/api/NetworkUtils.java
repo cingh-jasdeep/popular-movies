@@ -19,7 +19,7 @@
  * and modified according to needs of this project
  */
 
-package example.android.com.popularmovies.utilities;
+package example.android.com.popularmovies.api;
 
 import android.content.Context;
 import android.net.Uri;

@@ -35,15 +35,19 @@
     <!-- Key name for storing sort order in SharedPreferences [CHAR LIMIT=NONE] -->
     <string name="pref_sort_key" translatable="false">sort</string>
 
-    <!-- Label in SharedPreferences for popular sort option -->
+    <!-- Label in SharedPreferences for isPopular sort option -->
     <string name="pref_sort_label_popular">Most Popular</string>
     <!-- Label in SharedPreferences for top rated sort option -->
     <string name="pref_sort_label_top_rated">Highest Rated</string>
+    <!-- Label in SharedPreferences for favorites sort option -->
+    <string name="pref_sort_label_favorite">Favorites</string>
 
-    <!-- Value in SharedPreferences for popular sort option -->
-    <string name="pref_sort_popular" translatable="false">popular</string>
+    <!-- Value in SharedPreferences for isPopular sort option -->
+    <string name="pref_sort_popular" translatable="false">isPopular</string>
     <!-- Value in SharedPreferences for top rated sort option -->
     <string name="pref_sort_top_rated" translatable="false">top_rated</string>
+    <!-- Value in SharedPreferences for favorites sort option -->
+    <string name="pref_sort_favorite" translatable="false">isFavorite</string>
 
     <!-- Default value in SharedPreferences sort option -->
     <string name="pref_sort_default" translatable="false">@string/pref_sort_popular</string>
@@ -55,6 +59,10 @@
       - Fun Fact: Accessibility is abbreviated a11y because accessibility starts with 'a', -
       - followed by 11 letters, and then a 'y'. It is pronounced alley, like an alley cat. -
       - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -->
-    <string name="a11y_poster">Forecast: <xliff:g id="movie_name">%1$s</xliff:g></string>
+    <string name="a11y_poster">Movie Poster: <xliff:g id="movie_name">%1$s</xliff:g></string>
+
+    <string name="message_no_show">No movies to show!</string>
+    <string name="pref_last_network_update" translatable="false">last_network_update</string>
+    <string name="action_refresh">Refresh</string>
 
 </resources>

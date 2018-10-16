@@ -32,11 +32,10 @@ import android.widget.ImageView;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.data.Movie;
+import example.android.com.popularmovies.db.MovieEntry;
 
 /**
  *  Exposes a list of movies to a RecyclerView
@@ -44,7 +43,7 @@ import example.android.com.popularmovies.data.Movie;
  */
 public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdapterViewHolder>{
 
-    private List<Movie> mMoviesData;
+    private List<MovieEntry> mMoviesData;
     private Context mContext;
     private MoviesAdapterOnClickHandler mClickHandler;
 
@@ -52,7 +51,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      * click handler to get movie object at a particular position
      */
     public interface MoviesAdapterOnClickHandler {
-        void onClick(Movie movie);
+        void onClick(MovieEntry movie);
     }
 
     public MoviesAdapter(Context context, MoviesAdapterOnClickHandler clickHandler) {
@@ -78,7 +77,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         @Override
         public void onClick(View v) {
             if(mMoviesData!=null) {
-                Movie movie = mMoviesData.get(getAdapterPosition());
+                MovieEntry movie = mMoviesData.get(getAdapterPosition());
                 mClickHandler.onClick(movie);
             }
         }
@@ -107,7 +106,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
      */
     @Override
     public void onBindViewHolder(@NonNull MoviesAdapterViewHolder holder, int position) {
-        Movie movie = mMoviesData.get(position);
+        MovieEntry movie = mMoviesData.get(position);
         if(movie!=null) {
             Picasso.with(mContext)
                     .load(movie.getMoviePosterUrl())
@@ -130,15 +129,28 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     }
 
 
+//    /**
+//     * @param movies array of movie objects to be added to rv
+//     * **/
+//    public void setMoviesData(MovieEntry[] movies) {
+//        if(mMoviesData == null) { mMoviesData = new ArrayList<>();}
+//        mMoviesData.clear();
+//        //check argument
+//        if (movies != null && movies.length != 0) {
+//            mMoviesData.addAll(Arrays.asList(movies));
+//        }
+//        notifyDataSetChanged();
+//    }
+
     /**
-     * @param movies array of movie objects to be added to rv
+     * @param movies list of movie objects to be added to rv
      * **/
-    public void setMoviesData(Movie[] movies) {
+    public void setMoviesData(List<MovieEntry> movies) {
         if(mMoviesData == null) { mMoviesData = new ArrayList<>();}
         mMoviesData.clear();
         //check argument
-        if (movies != null && movies.length != 0) {
-            mMoviesData.addAll(Arrays.asList(movies));
+        if (movies != null && movies.size() != 0) {
+            mMoviesData.addAll(movies);
         }
         notifyDataSetChanged();
     }
