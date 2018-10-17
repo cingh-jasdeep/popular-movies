@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.utilities;
+package example.android.com.popularmovies;
 
 /*
  * Copyright (C) 2017 The Android Open Source Project

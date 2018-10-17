@@ -8,7 +8,7 @@ import android.support.annotation.NonNull;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import example.android.com.popularmovies.utilities.AppExecutors;
+import example.android.com.popularmovies.AppExecutors;
 import example.android.com.popularmovies.data.MovieRepository;
 import example.android.com.popularmovies.data.MoviesPreferences;
 import example.android.com.popularmovies.db.AppDatabase;

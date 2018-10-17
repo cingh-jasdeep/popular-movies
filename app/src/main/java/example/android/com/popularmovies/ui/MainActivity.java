@@ -28,6 +28,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -41,6 +42,11 @@ import android.widget.TextView;
 
 
 import com.facebook.stetho.Stetho;
+import com.zplesac.connectionbuddy.ConnectionBuddy;
+import com.zplesac.connectionbuddy.ConnectionBuddyConfiguration;
+import com.zplesac.connectionbuddy.interfaces.ConnectivityChangeListener;
+import com.zplesac.connectionbuddy.models.ConnectivityEvent;
+import com.zplesac.connectionbuddy.models.ConnectivityState;
 
 import java.util.List;
 
@@ -55,7 +61,8 @@ public class MainActivity extends AppCompatActivity
         implements MoviesAdapter.MoviesAdapterOnClickHandler,
         SharedPreferences.OnSharedPreferenceChangeListener,
         SwipeRefreshLayout.OnRefreshListener,
-        Observer<List<MovieEntry>>{
+        Observer<List<MovieEntry>>,
+        ConnectivityChangeListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
 
@@ -83,11 +90,17 @@ public class MainActivity extends AppCompatActivity
 
     private MenuItem mRefreshMenuItem;
 
+    private Snackbar mSnackBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //debugging with stetho
         Stetho.initializeWithDefaults(this);
+
+        ConnectionBuddyConfiguration networkInspectorConfiguration = new ConnectionBuddyConfiguration.Builder(this).build();
+        ConnectionBuddy.getInstance().init(networkInspectorConfiguration);
 
         setContentView(R.layout.activity_main);
 
@@ -138,6 +151,8 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
+        ConnectionBuddy.getInstance().registerForConnectivityEvents(this, this);
+
         if(mSortPrefUpdate) {
             mSortPrefUpdate = false;
             mSwipeRefreshLayout.setRefreshing(true);
@@ -146,6 +161,11 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        ConnectionBuddy.getInstance().unregisterFromConnectivityEvents(this);
+    }
 
     private void showRefreshUi(boolean bool) {
         mSwipeRefreshLayout.setEnabled(bool);
@@ -306,5 +326,29 @@ public class MainActivity extends AppCompatActivity
         intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
         startActivity(intent);
     }
+
+    @Override
+    public void onConnectionChange(ConnectivityEvent event) {
+        boolean isConnected = event.getState() == ConnectivityState.CONNECTED;
+        showRefreshUi(isConnected);
+        showConnectionSnackBar(isConnected);
+    }
+
+    private void showConnectionSnackBar(boolean isConnected) {
+        if(mSwipeRefreshLayout!=null) {
+            if(isConnected) {
+                //hide snackbar
+                if(mSnackBar!=null) {
+                    mSnackBar.dismiss();
+                }
+
+            } else {
+                //show snackbar
+                mSnackBar = Snackbar.make(mSwipeRefreshLayout, R.string.message_no_internet_main, Snackbar.LENGTH_INDEFINITE);
+                mSnackBar.show();
+            }
+        }
+    }
+
 
 }
