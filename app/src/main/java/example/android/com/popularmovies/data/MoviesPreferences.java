@@ -9,6 +9,8 @@ import java.util.List;
 
 import example.android.com.popularmovies.R;
 
+import static example.android.com.popularmovies.data.Constant.DEFAULT_MOVIE_ID;
+
 public class MoviesPreferences {
 
     /**
@@ -18,7 +20,7 @@ public class MoviesPreferences {
      * @param context Context used to get the SharedPreferences
      * @return Sort Order The current user has set in SharedPreferences.
      */
-    public static String getPreferredSortOrderKey(Context context) {
+    public static String getPreferredSortOrder(Context context) {
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
         String keyForSort = context.getString(R.string.pref_sort_key);
         String defaultSort = context.getString(R.string.pref_sort_default);
@@ -53,7 +55,7 @@ public class MoviesPreferences {
 
     /**
      * Saves the time that a network update is done. This will be used to get the ellapsed time
-     * since a netowrk update was done.
+     * since a netowprk update was done.
      *
      * @param context Used to access SharedPreferences
      * @param timeOfUpdate Time of last notification to save (in UNIX time)
@@ -61,7 +63,7 @@ public class MoviesPreferences {
     public static void saveLastNetworkUpdateTime(Context context, long timeOfUpdate) {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor editor = sp.edit();
-        String lastNetworkUpdateKey = context.getString(R.string.pref_last_network_update);
+        String lastNetworkUpdateKey = context.getString(R.string.pref_last_network_update_key);
         editor.putLong(lastNetworkUpdateKey, timeOfUpdate);
         editor.apply();
     }
@@ -72,9 +74,9 @@ public class MoviesPreferences {
      * @param context Used to access SharedPreferences
      * @return UNIX time of when the last network update was done
      */
-    public static long getLastNotificationTimeInMillis(Context context) {
-        /* Key for accessing the time at which Sunshine last displayed a notification */
-        String lastNetworkUpdateKey = context.getString(R.string.pref_last_network_update);
+    public static long getLastNetworkUpdateTimeInMillis(Context context) {
+        /* Key for accessing the time at which Pop Movies updated movies over network */
+        String lastNetworkUpdateKey = context.getString(R.string.pref_last_network_update_key);
 
         /* As usual, we use the default SharedPreferences to access the user's preferences */
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
@@ -103,8 +105,31 @@ public class MoviesPreferences {
      */
     public static long getEllapsedTimeSinceLastNetworkUpdate(Context context) {
         long lastNotificationTimeMillis =
-                MoviesPreferences.getLastNotificationTimeInMillis(context);
+                MoviesPreferences.getLastNetworkUpdateTimeInMillis(context);
         long timeSinceLastNetworkUpdate = System.currentTimeMillis() - lastNotificationTimeMillis;
         return timeSinceLastNetworkUpdate;
+    }
+
+
+
+    public static void saveCurrentMovieId(Context context, int movieId) {
+
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sp.edit();
+        String currentMovieIdKey = context.getString(R.string.pref_curr_movie_id_key);
+        editor.putInt(currentMovieIdKey, movieId);
+        editor.apply();
+
+    }
+
+    public static int getCurrentMovieId(Context context) {
+
+        /* Key for accessing the time at which Sunshine last displayed a notification */
+        String currentMovieIdKey = context.getString(R.string.pref_curr_movie_id_key);
+
+        /* As usual, we use the default SharedPreferences to access the user's preferences */
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+
+        return sp.getInt(currentMovieIdKey, DEFAULT_MOVIE_ID);
     }
 }

@@ -18,7 +18,7 @@
  * File copied from Sunshine project "S04.03-Solution-AddMapAndSharing"
  * and modified according to needs of this project
  */
-package example.android.com.popularmovies.ui;
+package example.android.com.popularmovies.ui.movie_grid;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -51,17 +51,20 @@ import com.zplesac.connectionbuddy.models.ConnectivityState;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.db.MovieEntry;
+import example.android.com.popularmovies.model.MovieEntry;
 import example.android.com.popularmovies.data.MoviesPreferences;
 import example.android.com.popularmovies.sync.MovieSyncUtilities;
 import example.android.com.popularmovies.sync.MoviesSyncTasks;
-import example.android.com.popularmovies.utilities.MoviesAdapter;
+import example.android.com.popularmovies.ui.settings.SettingsActivity;
+import example.android.com.popularmovies.ui.movie_details.MovieDetailsActivity;
+import example.android.com.popularmovies.utilities.Resource;
+
+import static example.android.com.popularmovies.data.Constant.EXTRA_MOVIE_ID;
 
 public class MainActivity extends AppCompatActivity
         implements MoviesAdapter.MoviesAdapterOnClickHandler,
         SharedPreferences.OnSharedPreferenceChangeListener,
         SwipeRefreshLayout.OnRefreshListener,
-        Observer<List<MovieEntry>>,
         ConnectivityChangeListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -96,40 +99,46 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //debugging with stetho
-        Stetho.initializeWithDefaults(this);
-
-        ConnectionBuddyConfiguration networkInspectorConfiguration = new ConnectionBuddyConfiguration.Builder(this).build();
-        ConnectionBuddy.getInstance().init(networkInspectorConfiguration);
-
         setContentView(R.layout.activity_main);
 
+        //debugging with stetho
+        Stetho.initializeWithDefaults(this);
+        //detect changes in network connection
+        setupConnectionBuddy();
+
+        //setup ui components including recyclerview
+        setupUiComponents();
+
+        /* Once all of our views are setup, we can load the movie data. */
+
+        // register on shared preference change listener to check for preference change
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(this);
+
+        // send out intent service to update database using given preferences
+        loadMovieData(false, false);
+
+    }
+
+    private void setupUiComponents() {
         mRecyclerView = findViewById(R.id.rv_movies);
         mMoviesAdapter = new MoviesAdapter(this, this);
         mRecyclerView.setHasFixedSize(true);
         mRecyclerView.setAdapter(mMoviesAdapter);
 
-
         /* This TextView is used to display errors and will be hidden if there are no errors */
         mErrorMessageDisplay = findViewById(R.id.tv_error_message_display);
-
         /*
-         * The ProgressBar that will indicate to the user that we are loading data. It will be
+         * The Refresh Layout that will indicate to the user that we are loading data. It will be
          * hidden when no data is loading.
          */
         mSwipeRefreshLayout = findViewById(R.id.srl_rv_movies);
-
-        /* Once all of our views are setup, we can load the movie data. */
-        /* starting page is 1 */
-        //send out intent service to update databse using given preferences
-        // register on shared preference change listener to check for preference change
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(this);
         mSwipeRefreshLayout.setOnRefreshListener(this);
+    }
 
-        mSwipeRefreshLayout.setRefreshing(true);
-        loadMovieData(false, false);
-
+    private void setupConnectionBuddy() {
+        ConnectionBuddyConfiguration networkInspectorConfiguration = new ConnectionBuddyConfiguration.Builder(this).build();
+        ConnectionBuddy.getInstance().init(networkInspectorConfiguration);
     }
 
     @Override
@@ -155,8 +164,6 @@ public class MainActivity extends AppCompatActivity
 
         if(mSortPrefUpdate) {
             mSortPrefUpdate = false;
-            mSwipeRefreshLayout.setRefreshing(true);
-            showRefreshUi(!MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext()));
             loadMovieData(false, true);
         }
     }
@@ -173,45 +180,47 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * This method will get the user's preferred sort order , and then tell some
-     * background method to get the movie data in the background.
+     * This method will get load movie data into the recyclerview adapter
+     *
      */
     private void loadMovieData(boolean forceUpdate, boolean prefChanged) {
 
-        if(forceUpdate) {
-            MovieSyncUtilities.startImmediateSync(this, MoviesSyncTasks.ACTION_UPDATE_ALL_MOVIES);
-        } else {
-            MovieSyncUtilities.doNetworkUpdate(this, MoviesSyncTasks.ACTION_UPDATE_ALL_MOVIES);
-        }
-
-        showMovieDataView();
-
-        setupViewModel(prefChanged);
-
-    }
-
-    private void setupViewModel(boolean prefChanged) {
         mViewModel = ViewModelProviders.of(this).get(MainViewModel.class);
 
-        // reinitialize data on change in preferences
-        if(prefChanged) {
-            mViewModel.updateSortedResults(getApplicationContext());
+        // reinitialize data on change in preferences and force update
+        if(prefChanged || forceUpdate) {
+            mSwipeRefreshLayout.setRefreshing(true);
+            String sortOrder = MoviesPreferences.getPreferredSortOrder(this);
+            mViewModel.updateQuery(sortOrder, forceUpdate);
         }
-
-        mViewModel.displayMovies.observe(this, this);
+        mViewModel.displayMovies.observe(this, new Observer<Resource<List<MovieEntry>>>() {
+            @Override
+            public void onChanged(@Nullable Resource<List<MovieEntry>> listResource) {
+                Log.d(TAG, "Updating movies display from LiveData in ViewModel");
+                if(listResource != null) {
+                    switch (listResource.status) {
+                        case ERROR: {
+                            Log.i(TAG, "onChanged: [error] " + listResource.message);
+                            showMoviesData(listResource.data, false);
+                            break;
+                        }
+                        case LOADING: {
+                            showMoviesData(listResource.data, true);
+                            break;
+                        }
+                        case SUCCESS: {
+                            showMoviesData(listResource.data, false);
+                            break;
+                        }
+                    }
+                }
+            }
+        });
     }
 
 
-    @Override
-    public void onChanged(@Nullable List<MovieEntry> movieEntryList) {
-        Log.d(TAG, "Updating movies display from LiveData in ViewModel");
-        showMoviesData(movieEntryList);
-    }
-
-    public void showMoviesData(List<MovieEntry> moviesData) {
-        /* hide loading after change in data */
-//        mLoadingIndicator.setVisibility(View.INVISIBLE);
-        if(mSwipeRefreshLayout.isRefreshing()) {
+    public void showMoviesData(List<MovieEntry> moviesData, boolean keepRefreshingUi) {
+        if(!keepRefreshingUi && mSwipeRefreshLayout.isRefreshing()) {
             mSwipeRefreshLayout.setRefreshing(false);
         }
         setActionBarSubtitle();
@@ -286,11 +295,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         if (id == R.id.action_refresh) {
-
-            if(!MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext())) {
-                mSwipeRefreshLayout.setRefreshing(true);
-                loadMovieData(true, false);
-            }
+            loadMovieData(true, false);
             //don't do anything if favorite sort order
 
             return true;
@@ -301,12 +306,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onRefresh() {
-        if(MoviesPreferences.isFavoriteSortOrderLabel(getApplicationContext())) {
-            //no need to refresh favorite movies
-            mSwipeRefreshLayout.setRefreshing(false);
-        } else {
-            loadMovieData(true, false);
-        }
+        loadMovieData(true, false);
     }
 
     /**
@@ -323,7 +323,9 @@ public class MainActivity extends AppCompatActivity
         /* Put movie object into intent extra
          * see https://www.techjini.com/blog/passing-objects-via-intent-in-android/
          */
-        intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
+//        intent.putExtra(MovieDetailsActivity.EXTRA_MOVIE, movie);
+        intent.putExtra(EXTRA_MOVIE_ID, movie.getId());
+
         startActivity(intent);
     }
 

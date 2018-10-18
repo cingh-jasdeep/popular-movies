@@ -35,8 +35,11 @@ import java.util.Scanner;
 import example.android.com.popularmovies.R;
 
 import static example.android.com.popularmovies.data.Constant.TMDB_API_KEY;
+import static example.android.com.popularmovies.data.Constant.TMDB_MOVIE_BASE_URL;
 import static example.android.com.popularmovies.data.Constant.TMDB_PARAM_API_KEY;
 import static example.android.com.popularmovies.data.Constant.TMDB_PARAM_PAGE;
+import static example.android.com.popularmovies.data.Constant.TMDB_PATH_PARAM_REVIEWS;
+import static example.android.com.popularmovies.data.Constant.TMDB_PATH_PARAM_VIDEOS;
 import static example.android.com.popularmovies.data.Constant.TMDB_POPULAR_MOVIES_URL;
 import static example.android.com.popularmovies.data.Constant.TMDB_TOP_RATED_MOVIES_URL;
 
@@ -115,5 +118,58 @@ public final class NetworkUtils {
         } finally {
             urlConnection.disconnect();
         }
+    }
+
+    public static URL buildTrailersUrl(Context context, int movieId) {
+        String baseUrl = TMDB_MOVIE_BASE_URL;
+
+        // check for invalid movieId
+        if(movieId <= 0) {
+            Log.d(TAG, "buildTrailersUrl() called with: context = [" + context + "], movieId = [" + movieId + "]");
+            return null;
+        }
+
+        Uri builtUri = Uri.parse(baseUrl).buildUpon()
+                .appendPath(Integer.toString(movieId))
+                .appendPath(TMDB_PATH_PARAM_VIDEOS)
+                .appendQueryParameter(TMDB_PARAM_API_KEY, TMDB_API_KEY)
+                .build();
+
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        Log.v(TAG, "Built Trailers URI " + url);
+
+        return url;
+    }
+
+    public static URL buildReviewsUrl(Context context, int movieId) {
+
+        // check for invalid movieId
+        if(movieId <= 0) {
+            Log.d(TAG, "buildReviewsUrl() called with: context = [" + context + "], movieId = [" + movieId + "]");
+            return null;
+        }
+
+        Uri builtUri = Uri.parse(TMDB_MOVIE_BASE_URL).buildUpon()
+                .appendPath(Integer.toString(movieId))
+                .appendPath(TMDB_PATH_PARAM_REVIEWS)
+                .appendQueryParameter(TMDB_PARAM_API_KEY, TMDB_API_KEY)
+                .build();
+
+        URL url = null;
+        try {
+            url = new URL(builtUri.toString());
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+
+        Log.v(TAG, "Built Trailers URI " + url);
+
+        return url;
     }
 }

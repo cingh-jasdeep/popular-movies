@@ -13,7 +13,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.movie_grid.MainActivity"
             android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -22,15 +22,15 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ui.MovieDetailsActivity"
+            android:name=".ui.movie_details.MovieDetailsActivity"
             android:label="@string/movie_detail_label"
-            android:parentActivityName=".ui.MainActivity">
+            android:parentActivityName=".ui.movie_grid.MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".ui.MainActivity" />
+                android:value=".ui.movie_grid.MainActivity" />
         </activity>
         <activity
-            android:name=".ui.SettingsActivity"
+            android:name=".ui.settings.SettingsActivity"
             android:label="@string/action_settings">
         </activity>
         <!--This is required for immediate syncs -->

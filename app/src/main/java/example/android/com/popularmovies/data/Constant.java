@@ -14,6 +14,15 @@ public class Constant {
     public static final String TMDB_TOP_RATED_MOVIES_URL =
             "https://api.themoviedb.org/3/movie/top_rated";
 
+    public static final String TMDB_MOVIE_BASE_URL =
+            "https://api.themoviedb.org/3/movie/";
+
+    public static final String TMDB_POPULAR_MOVIES_URL_PATH =
+            "popular";
+
+    public static final String TMDB_TOP_RATED_MOVIES_URL_PATH =
+            "top_rated";
+
     /*
      * themoviedb.org API key
      *
@@ -27,10 +36,18 @@ public class Constant {
     public final static String TMDB_PARAM_API_KEY = "api_key";
     public final static String TMDB_PARAM_PAGE = "page";
 
+    public final static String TMDB_PATH_PARAM_VIDEOS = "videos";
+    public final static String TMDB_PATH_PARAM_REVIEWS = "reviews";
+
+    public final static String TMDB_PATH_PARAM_SORT_ORDER_KEY = "sort_order";
+
+
     /*
      * themoviedb.org API other network related constants
      */
     public static final int TMDB_DEFAULT_PAGE = 1;
+    public static final String TMDB_DATE_FORMAT = "yyyy-MM-dd";
+
 
     /*
      * flags to store movie tag
@@ -46,7 +63,7 @@ public class Constant {
     /*
      * constants used by network sync
      */
-    public final static long NETWORK_UPDATE_THRESHOLD_6_HOURS = 6;
+    public final static long NETWORK_UPDATE_THRESHOLD_IN_HOURS = 6;
 
     /*
      * themoviedb.org API poster related constants
@@ -99,5 +116,32 @@ public class Constant {
 
     /* MovieEntry popularity */
     public static final String TMDB_JSON_POPULARITY_RATING = "popularity";
+
+    public static final String TMDB_TRAILER_JSON_SITE = "site";
+
+    public static final String TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE = "YouTube";
+
+    public static final String TMDB_TRAILER_JSON_TYPE = "type";
+
+    public static final String TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER = "Trailer";
+
+    public static final String TMDB_TRAILER_JSON_KEY = "key";
+
+    public static final String TMDB_REVIEW_JSON_AUTHOR = "author";
+
+    public static final String TMDB_REVIEW_JSON_CONTENT = "content";
+
+    public static final String TMDB_REVIEW_JSON_URL = "url";
+
+
+
+    /* Constants for moviedetail activity */
+
+    // Extra for the movie ID to be received in the intent
+    public static final String EXTRA_MOVIE_ID = "extra_movie_id";
+    // Extra for the movie ID to be received after rotation
+    public static final String INSTANCE_MOVIE_ID = "instanceTaskId";
+
+    public static final int DEFAULT_MOVIE_ID = -1;
 
 }

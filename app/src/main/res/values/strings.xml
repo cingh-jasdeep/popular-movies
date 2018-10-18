@@ -43,11 +43,11 @@
     <string name="pref_sort_label_favorite">Favorites</string>
 
     <!-- Value in SharedPreferences for isPopular sort option -->
-    <string name="pref_sort_popular" translatable="false">isPopular</string>
+    <string name="pref_sort_popular" translatable="false">popular</string>
     <!-- Value in SharedPreferences for top rated sort option -->
     <string name="pref_sort_top_rated" translatable="false">top_rated</string>
     <!-- Value in SharedPreferences for favorites sort option -->
-    <string name="pref_sort_favorite" translatable="false">isFavorite</string>
+    <string name="pref_sort_favorite" translatable="false">favorite</string>
 
     <!-- Default value in SharedPreferences sort option -->
     <string name="pref_sort_default" translatable="false">@string/pref_sort_popular</string>
@@ -62,8 +62,22 @@
     <string name="a11y_poster">Movie Poster: <xliff:g id="movie_name">%1$s</xliff:g></string>
 
     <string name="message_no_show">No movies to show!</string>
-    <string name="pref_last_network_update" translatable="false">last_network_update</string>
+
+    <!-- Key name for storing last network update time for all movies in SharedPreferences-->
+    <string name="pref_last_network_update_key" translatable="false">last_network_update</string>
+
+    <!-- Key name for storing current movie id from movie details screen in SharedPreferences-->
+    <string name="pref_curr_movie_id_key" translatable="false">curr_movie_id</string>
+
+
     <string name="action_refresh">Refresh</string>
     <string name="message_no_internet_main">Internet Offline. Cannot get latest movies!</string>
     <string name="message_no_internet_detail">Internet Offline. Reviews and trailers not available!</string>
+    <string name="a11y_play_movie_trailer">Play movie trailer</string>
+    <string name="sample_fill_trailer_text">Trailer 1</string>
+    <string name="text_trailer_list_heading">Trailers:</string>
+
+    <string name="trailer_title_format">Trailer <xliff:g id="trailer_number">%1$s</xliff:g></string>
+    <string name="a11y_play_movie_trailer_formatted">Play movie trailer <xliff:g id="trailer_number">%1$s</xliff:g></string>
+
 </resources>

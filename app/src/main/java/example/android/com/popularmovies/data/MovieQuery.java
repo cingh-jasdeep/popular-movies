@@ -7,40 +7,28 @@ import android.os.Parcelable;
  * query object to query movies from async task loader
  */
 
-public class MovieQuery implements Parcelable {
-    public String sort_order; // sort order
-    public int page; //page number
+public class MovieQuery {
+    private String sortOrder; // sort order
+    private boolean forceUpdate; //page number
 
-    protected MovieQuery(Parcel in) {
-        sort_order = in.readString();
-        page = in.readInt();
+    public MovieQuery(String sortOrder, boolean forceUpdate) {
+        this.sortOrder = sortOrder;
+        this.forceUpdate = forceUpdate;
     }
 
-    public MovieQuery(String sort_order, int page) {
-        this.sort_order = sort_order;
-        this.page = page;
+    public String getSortOrder() {
+        return sortOrder;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(sort_order);
-        dest.writeInt(page);
+    public void setSortOrder(String sortOrder) {
+        this.sortOrder = sortOrder;
     }
 
-    @Override
-    public int describeContents() {
-        return 0;
+    public boolean isForceUpdate() {
+        return forceUpdate;
     }
 
-    public static final Creator<MovieQuery> CREATOR = new Creator<MovieQuery>() {
-        @Override
-        public MovieQuery createFromParcel(Parcel in) {
-            return new MovieQuery(in);
-        }
-
-        @Override
-        public MovieQuery[] newArray(int size) {
-            return new MovieQuery[size];
-        }
-    };
+    public void setForceUpdate(boolean forceUpdate) {
+        this.forceUpdate = forceUpdate;
+    }
 }

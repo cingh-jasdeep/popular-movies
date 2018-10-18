@@ -7,9 +7,16 @@ import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 import android.util.Log;
 
+import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.model.MovieReviewEntry;
+import example.android.com.popularmovies.model.MovieTrailerEntry;
+
 import static example.android.com.popularmovies.data.Constant.APP_DATABASE_NAME;
 
-@Database(entities = {MovieEntry.class}, version = 1, exportSchema = false)
+@Database(entities = {MovieEntry.class,
+                        MovieTrailerEntry.class,
+                        MovieReviewEntry.class},
+                        version = 1, exportSchema = false)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -32,5 +39,7 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     public abstract MovieDao movieDao();
+    public abstract MovieTrailerDao movieTrailerDao();
+    public abstract MovieReviewDao movieReviewDao();
 
 }

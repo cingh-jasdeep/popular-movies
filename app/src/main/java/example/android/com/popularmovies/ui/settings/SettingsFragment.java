@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.ui;
+package example.android.com.popularmovies.ui.settings;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;

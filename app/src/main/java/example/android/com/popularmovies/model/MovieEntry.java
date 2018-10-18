@@ -1,44 +1,56 @@
-package example.android.com.popularmovies.db;
+package example.android.com.popularmovies.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
+import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.google.gson.annotations.SerializedName;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 
 import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_FALSE;
+import static example.android.com.popularmovies.data.Constant.TMDB_DATE_FORMAT;
 
 /**
  * Implement movie object as Parcelable for faster performance
  * see <a href="Parcelable">https://github.com/udacity/android-custom-arrayadapter/tree/parcelable</a>
  */
 @Entity(tableName = "movie")
+
 public class MovieEntry implements Parcelable {
 
+    @SerializedName("id")
     @PrimaryKey
-    @ColumnInfo(name = "movie_id")
-    private int movieId;
+    private int id;
 
+    @SerializedName("title")
     @ColumnInfo(name = "movie_title")
     private String movieTitle;
 
+    @SerializedName("release_date")
     @ColumnInfo(name = "release_date")
     private Date releaseDate; //parse in date object
 
+    @SerializedName("poster_path")
     @ColumnInfo(name = "movie_poster_url")
     private String moviePosterUrl; //full url of movie poster
 
+    @SerializedName("vote_average")
     @ColumnInfo(name = "vote_average")
     private double voteAverage;
 
+
+    @SerializedName("overview")
     @ColumnInfo(name = "plot_synopsis")
     private String plotSynopsis;
 
+    @SerializedName("popularity")
     @ColumnInfo(name = "popularity_rating")
     private double popularityRating;
 
@@ -48,10 +60,12 @@ public class MovieEntry implements Parcelable {
 
     private int isTopRated;
 
-    public MovieEntry(int movieId, String movieTitle, Date releaseDate, String moviePosterUrl,
+    private long updatedAt;
+
+    public MovieEntry(int id, String movieTitle, Date releaseDate, String moviePosterUrl,
                       double voteAverage, String plotSynopsis, double popularityRating,
-                      int isFavorite, int isPopular, int isTopRated) {
-        this.movieId = movieId;
+                      int isFavorite, int isPopular, int isTopRated, long updatedAt) {
+        this.id = id;
         this.movieTitle = movieTitle;
         this.releaseDate = releaseDate;
         this.moviePosterUrl = moviePosterUrl;
@@ -62,12 +76,13 @@ public class MovieEntry implements Parcelable {
         this.isFavorite = isFavorite;
         this.isPopular = isPopular;
         this.isTopRated = isTopRated;
+        this.updatedAt = updatedAt;
     }
 
     @Ignore
-    public MovieEntry(int movieId, String movieTitle, Date releaseDate, String moviePosterUrl,
+    public MovieEntry(int id, String movieTitle, Date releaseDate, String moviePosterUrl,
                       double voteAverage, String plotSynopsis, double popularityRating) {
-        this.movieId = movieId;
+        this.id = id;
         this.movieTitle = movieTitle;
         this.releaseDate = releaseDate;
         this.moviePosterUrl = moviePosterUrl;
@@ -82,12 +97,12 @@ public class MovieEntry implements Parcelable {
     }
 
     public String toString() {
-        return movieId + "--" + movieTitle + "--" + getSimpleDateString(releaseDate)
+        return id + "--" + movieTitle + "--" + getSimpleDateString(releaseDate)
             + "--" + moviePosterUrl + "--" + voteAverage + "--" + plotSynopsis + "--" + popularityRating;
     }
 
     public MovieEntry(Parcel in) {
-        movieId = in.readInt();
+        id = in.readInt();
         movieTitle = in.readString();
         releaseDate = new Date(in.readLong());
         moviePosterUrl = in.readString();
@@ -98,12 +113,13 @@ public class MovieEntry implements Parcelable {
         isFavorite = in.readInt();
         isPopular = in.readInt();
         isTopRated = in.readInt();
+        updatedAt = in.readLong();
     }
 
     // online reference: https://stackoverflow.com/questions/21017404/reading-and-writing-java-util-date-from-parcelable-class
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeInt(movieId);
+        dest.writeInt(id);
         dest.writeString(movieTitle);
         dest.writeLong(releaseDate.getTime());
         dest.writeString(moviePosterUrl);
@@ -114,6 +130,7 @@ public class MovieEntry implements Parcelable {
         dest.writeInt(isFavorite);
         dest.writeInt(isPopular);
         dest.writeInt(isTopRated);
+        dest.writeLong(updatedAt);
     }
 
     public static final Creator<MovieEntry> CREATOR = new Creator<MovieEntry>() {
@@ -135,9 +152,9 @@ public class MovieEntry implements Parcelable {
 
 
     //getters and setters
-    public int getMovieId() { return movieId; }
+    public int getId() { return id; }
 
-    public void setMovieId(int movieId) { this.movieId = movieId; }
+    public void setId(int id) { this.id = id; }
 
     public String getMovieTitle() {
         return movieTitle;
@@ -214,13 +231,20 @@ public class MovieEntry implements Parcelable {
         this.popularityRating = popularityRating;
     }
 
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
 
     //reference: http://tutorials.jenkov.com/java-internationalization/simpledateformat.html
     //used to give a string representation in toString function
     private String getSimpleDateString (Date date) {
         if(date!=null) {
-            String pattern = "yyyy-MM-dd";
-            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern, Locale.getDefault());
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat(TMDB_DATE_FORMAT, Locale.getDefault());
             return simpleDateFormat.format(date);
         } else {
             return null;

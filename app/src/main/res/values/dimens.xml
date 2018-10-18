@@ -5,4 +5,7 @@
     <dimen name="detail_title_left_right_padding">16dp</dimen>
     <dimen name="detail_title_top_bottom_padding">24dp</dimen>
     <dimen name="detail_title_text_size">38sp</dimen>
+    <dimen name="icon_size_trailer_play">40dp</dimen>
+    <dimen name="layout_margin_trailer">16dp</dimen>
+    <dimen name="text_padding_trailer">16dp</dimen>
 </resources>

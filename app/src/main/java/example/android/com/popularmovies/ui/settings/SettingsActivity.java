@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.ui;
+package example.android.com.popularmovies.ui.settings;
 
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;

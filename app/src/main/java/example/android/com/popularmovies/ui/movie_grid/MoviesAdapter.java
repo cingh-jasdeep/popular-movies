@@ -19,7 +19,7 @@
  * and modified according to needs of this project
  */
 
-package example.android.com.popularmovies.utilities;
+package example.android.com.popularmovies.ui.movie_grid;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.db.MovieEntry;
+import example.android.com.popularmovies.model.MovieEntry;
 
 /**
  *  Exposes a list of movies to a RecyclerView
@@ -132,7 +132,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
 //    /**
 //     * @param movies array of movie objects to be added to rv
 //     * **/
-//    public void setMoviesData(MovieEntry[] movies) {
+//    public void setMovieTrailerData(MovieEntry[] movies) {
 //        if(mMoviesData == null) { mMoviesData = new ArrayList<>();}
 //        mMoviesData.clear();
 //        //check argument

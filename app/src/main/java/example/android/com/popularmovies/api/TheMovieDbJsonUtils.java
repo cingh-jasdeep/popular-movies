@@ -28,10 +28,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.db.MovieEntry;
+import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.model.MovieReviewEntry;
+import example.android.com.popularmovies.model.MovieTrailerEntry;
 import example.android.com.popularmovies.utilities.MovieUtils;
 import example.android.com.popularmovies.utilities.PosterHelper;
 
@@ -44,7 +48,15 @@ import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RELEASE_
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_RESULTS;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_TITLE;
 import static example.android.com.popularmovies.data.Constant.TMDB_JSON_VOTE_AVG;
+import static example.android.com.popularmovies.data.Constant.TMDB_REVIEW_JSON_AUTHOR;
+import static example.android.com.popularmovies.data.Constant.TMDB_REVIEW_JSON_CONTENT;
+import static example.android.com.popularmovies.data.Constant.TMDB_REVIEW_JSON_URL;
 import static example.android.com.popularmovies.data.Constant.TMDB_STATUS_MESSAGE;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_KEY;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_SITE;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_TYPE;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER;
 
 /**
  * Utility functions to handle TheMovieDb JSON data.
@@ -130,5 +142,96 @@ public final class TheMovieDbJsonUtils {
         }
 
         return parsedMovieData;
+    }
+
+    public static List<MovieTrailerEntry> getMovieTrailersDataFromJson(Context context, String movieDbTrailerJsonStr)
+            throws JSONException {
+
+        /* MovieEntry array to hold each movie's information */
+        List<MovieTrailerEntry> parsedTrailerData;
+
+        JSONObject movieTrailerJson = new JSONObject(movieDbTrailerJsonStr);
+
+        /* Is there an error? */
+        if (movieTrailerJson.has(TMDB_STATUS_MESSAGE)) {
+            String responseErrorMessage = movieTrailerJson.optString(TMDB_STATUS_MESSAGE).trim();
+            Log.i(TAG, "getMovieTrailersDataFromJson: "+responseErrorMessage);
+            return null;
+        }
+
+        int movieId = movieTrailerJson.optInt(TMDB_JSON_ID);
+
+        JSONArray trailersArray = movieTrailerJson.optJSONArray(TMDB_JSON_RESULTS);
+
+        parsedTrailerData = new ArrayList<>();
+
+        for (int i = 0; i < trailersArray.length(); i++) {
+
+            /* These are the values that will be collected */
+            String trailerId;
+            String ytUrlKey;
+            String site;
+            String type;
+
+            /* Get the JSON object representing the day */
+            JSONObject videoInfo = trailersArray.optJSONObject(i);
+
+            trailerId = videoInfo.optString(TMDB_JSON_ID);
+
+            //only add to list if site is youtube and type is trailer
+            type = videoInfo.optString(TMDB_TRAILER_JSON_TYPE);
+            site = videoInfo.optString(TMDB_TRAILER_JSON_SITE);
+
+            if(TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE.equals(site)
+                    && TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER.equals(type)) {
+
+                ytUrlKey = videoInfo.optString(TMDB_TRAILER_JSON_KEY);
+                parsedTrailerData.add(new MovieTrailerEntry(movieId, trailerId, ytUrlKey));
+            }
+
+        }
+        return parsedTrailerData;
+    }
+
+    public static List<MovieReviewEntry> getMovieReviewsDataFromJson(Context context, String movieDbReviewJsonStr)
+            throws JSONException {
+
+        /* MovieEntry array to hold each movie's information */
+        List<MovieReviewEntry> parsedReviewData;
+
+        JSONObject movieReviewJson = new JSONObject(movieDbReviewJsonStr);
+
+        /* Is there an error? */
+        if (movieReviewJson.has(TMDB_STATUS_MESSAGE)) {
+            String responseErrorMessage = movieReviewJson.optString(TMDB_STATUS_MESSAGE).trim();
+            Log.i(TAG, "getMovieTrailersDataFromJson: "+responseErrorMessage);
+            return null;
+        }
+
+        int movieId = movieReviewJson.optInt(TMDB_JSON_ID);
+
+        JSONArray reviewsArray = movieReviewJson.optJSONArray(TMDB_JSON_RESULTS);
+
+        parsedReviewData = new ArrayList<>();
+
+        for (int i = 0; i < reviewsArray.length(); i++) {
+
+            /* These are the values that will be collected */
+            int reviewId;
+            String author;
+            String content;
+            String url;
+
+            /* Get the JSON object representing the day */
+            JSONObject reviewInfo = reviewsArray.optJSONObject(i);
+
+            reviewId = reviewInfo.optInt(TMDB_JSON_ID);
+            author = reviewInfo.optString(TMDB_REVIEW_JSON_AUTHOR);
+            content = reviewInfo.optString(TMDB_REVIEW_JSON_CONTENT);
+            url = reviewInfo.optString(TMDB_REVIEW_JSON_URL);
+
+            parsedReviewData.add(new MovieReviewEntry(reviewId, movieId, author, content, url));
+        }
+        return parsedReviewData;
     }
 }

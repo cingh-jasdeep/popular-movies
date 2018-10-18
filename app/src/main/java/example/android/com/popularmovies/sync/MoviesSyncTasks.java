@@ -11,12 +11,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import example.android.com.popularmovies.data.MovieRepository;
+import example.android.com.popularmovies.data.repository.MovieRepository;
 import example.android.com.popularmovies.data.MoviesPreferences;
 import example.android.com.popularmovies.db.AppDatabase;
-import example.android.com.popularmovies.db.MovieEntry;
+import example.android.com.popularmovies.model.MovieEntry;
 import example.android.com.popularmovies.api.NetworkUtils;
 import example.android.com.popularmovies.api.TheMovieDbJsonUtils;
+import example.android.com.popularmovies.model.MovieTrailerEntry;
 
 import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_TRUE;
 import static example.android.com.popularmovies.data.Constant.TMDB_DEFAULT_PAGE;
@@ -28,19 +29,27 @@ import static example.android.com.popularmovies.data.Constant.TMDB_DEFAULT_PAGE;
 public class MoviesSyncTasks {
 
     public static final String ACTION_UPDATE_ALL_MOVIES = "action-update-all-movies";
+    public static final String ACTION_UPDATE_MOVIE_TRAILERS = "action-update-movie-trailers";
+    public static final String ACTION_UPDATE_MOVIE_REVIEWS = "action-update-movie-reviews";
+
 
     public static void executeTask(Context context, String action) {
         if(action.equals(ACTION_UPDATE_ALL_MOVIES)) {
             updateMoviesFromNetwork(context);
+        } else if (action.equals(ACTION_UPDATE_MOVIE_TRAILERS)) {
+            updateMovieTrailersFromNetwork(context);
+        } else if (action.equals(ACTION_UPDATE_MOVIE_REVIEWS)) {
+            updateMovieReviewsFromNetwork(context);
         }
     }
+
 
     /**
      * Fetches latest movies from api and update db accordingly
      * @param context need to access various data
      */
     private static void updateMoviesFromNetwork(Context context) {
-        String queryType = MoviesPreferences.getPreferredSortOrderKey(context);
+        String queryType = MoviesPreferences.getPreferredSortOrder(context);
 
         URL moviesRequestUrl = NetworkUtils.buildUrl(context, queryType, TMDB_DEFAULT_PAGE);
 
@@ -48,7 +57,7 @@ public class MoviesSyncTasks {
 
             //check for favorite movies and keep them in separate list before updating data from website
             AppDatabase dB = AppDatabase.getInstance(context);
-            MovieRepository repo = MovieRepository.getInstance(dB.movieDao());
+            MovieRepository repo = MovieRepository.getInstance(dB);
 
             LiveData<List<MovieEntry>> favoriteMoviesLiveData = repo.getFavoriteMovies();
 
@@ -82,7 +91,7 @@ public class MoviesSyncTasks {
                     for (MovieEntry favoriteMovie :
                             favoriteMovies) {
 
-                        MovieEntry matchingMovie = findMovieByIdInList(favoriteMovie.getMovieId(),
+                        MovieEntry matchingMovie = findMovieByIdInList(favoriteMovie.getId(),
                                 updatedMoviesFromInternetList);
 
                         if (matchingMovie != null) {
@@ -113,11 +122,49 @@ public class MoviesSyncTasks {
 
     private static MovieEntry findMovieByIdInList(int id, List<MovieEntry> movieEntryList) {
         for(MovieEntry movieEntry : movieEntryList) {
-            if(movieEntry.getMovieId() == id) {
+            if(movieEntry.getId() == id) {
                 return movieEntry;
             }
         }
         return null;
     }
 
+    private static void updateMovieTrailersFromNetwork(Context context) {
+        int movieId = MoviesPreferences.getCurrentMovieId(context);
+
+        URL trailersRequestUrl = NetworkUtils.buildTrailersUrl(context, movieId);
+
+
+        try {
+
+            //check for favorite movies and keep them in separate list before updating data from website
+            AppDatabase dB = AppDatabase.getInstance(context);
+            MovieRepository repo = MovieRepository.getInstance(dB);
+
+            String jsonResponse = NetworkUtils
+                    .getResponseFromHttpUrl(trailersRequestUrl);
+            List<MovieTrailerEntry> movieTrailerDataFromInternetList = TheMovieDbJsonUtils
+                    .getMovieTrailersDataFromJson(context, jsonResponse);
+
+            //check if movie list from internet is null
+            if(movieTrailerDataFromInternetList == null
+                    || movieTrailerDataFromInternetList.size() == 0){ return; }
+
+            //update movie trailer data in database
+            repo.insertTrailersData(movieTrailerDataFromInternetList, movieId);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+
+    }
+
+
+    private static void updateMovieReviewsFromNetwork(Context context) {
+
+    }
 }
