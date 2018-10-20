@@ -17,11 +17,17 @@ public class Constant {
     public static final String TMDB_MOVIE_BASE_URL =
             "https://api.themoviedb.org/3/movie/";
 
+
     public static final String TMDB_POPULAR_MOVIES_URL_PATH =
             "popular";
 
     public static final String TMDB_TOP_RATED_MOVIES_URL_PATH =
             "top_rated";
+    /*
+     * Youtube related urls
+     */
+
+    public static final String YOUTUBE_VIDEO_BASE_URL = "https://www.youtube.com/watch?v=";
 
     /*
      * themoviedb.org API key

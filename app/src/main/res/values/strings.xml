@@ -71,8 +71,10 @@
 
 
     <string name="action_refresh">Refresh</string>
-    <string name="message_no_internet_main">Internet Offline. Cannot get latest movies!</string>
-    <string name="message_no_internet_detail">Internet Offline. Reviews and trailers not available!</string>
+
+    <string name="message_no_internet_main">Internet Offline. Refresh option disabled!</string>
+    <string name="message_no_internet_detail">Internet Offline. Refresh option disabled!</string>
+
     <string name="a11y_play_movie_trailer">Play movie trailer</string>
     <string name="sample_fill_trailer_text">Trailer 1</string>
     <string name="text_trailer_list_heading">Trailers:</string>
@@ -91,5 +93,7 @@
     <string name="sample_review_author">Frank Ochieng</string>
     <string name="sample_review_url">https://www.themoviedb.org/review/57a814dc9251415cfb00309a</string>
     <string name="text_reviews_list_heading">Reviews:</string>
+    <string name="action_share">Share</string>
+    <string name="message_share_no_trailer">No trailer to share!</string>
 
 </resources>

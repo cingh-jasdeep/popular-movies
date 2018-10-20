@@ -21,7 +21,7 @@ public class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapte
     private int mShortAnimationDuration;
 
 
-    public MovieReviewsAdapter(Context context) {
+    MovieReviewsAdapter(Context context) {
         mContext = context;
         mShortAnimationDuration = mContext.getResources().getInteger(
                 android.R.integer.config_longAnimTime);
@@ -32,14 +32,14 @@ public class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapte
      * we only use one viewType and one xml trailer_item.xml
      *
      * **/
-    public class MovieReviewAdapterViewHolder extends RecyclerView.ViewHolder{
+    class MovieReviewAdapterViewHolder extends RecyclerView.ViewHolder{
 
-        public final TextView mReviewAuthorTextView;
-        public final TextView mReviewUrlTextView;
-        public final TextView mReviewContentTextView;
-        public final View mItemView;
+        final TextView mReviewAuthorTextView;
+        final TextView mReviewUrlTextView;
+        final TextView mReviewContentTextView;
+        final View mItemView;
 
-        public MovieReviewAdapterViewHolder(View itemView) {
+        MovieReviewAdapterViewHolder(View itemView) {
             super(itemView);
             mReviewAuthorTextView = itemView.findViewById(R.id.tv_review_author);
             mReviewUrlTextView = itemView.findViewById(R.id.tv_review_url);
@@ -78,7 +78,7 @@ public class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapte
         if(review != null) {
             String formattedAuthorText = String.format(mContext.getString(R.string.review_author_formatted)
                     ,review.getAuthor());
-            holder.mReviewAuthorTextView.setText(review.getAuthor());
+            holder.mReviewAuthorTextView.setText(formattedAuthorText);
             holder.mReviewUrlTextView.setText(review.getUrl());
             holder.mReviewContentTextView.setText(review.getContent());
 
@@ -115,7 +115,7 @@ public class MovieReviewsAdapter extends RecyclerView.Adapter<MovieReviewsAdapte
     /**
      * @param reviewEntries list of trailers to be added to rv
      * **/
-    public void setMovieReviewData(List<MovieReviewEntry> reviewEntries) {
+    void setMovieReviewData(List<MovieReviewEntry> reviewEntries) {
         if(mReviewsData == null) { mReviewsData = new ArrayList<>();}
 
         mReviewsData.clear();

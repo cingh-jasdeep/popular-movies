@@ -4,6 +4,7 @@ package example.android.com.popularmovies.api.response_models;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.util.ArrayMap;
+import android.util.Log;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -12,13 +13,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import retrofit2.Response;
-import timber.log.Timber;
 
 /**
  * Common class used by API responses.
  * @param <T>
  */
 public class ApiResponse<T> {
+    private static final String TAG = ApiResponse.class.getSimpleName();
     private static final Pattern LINK_PATTERN = Pattern
             .compile("<([^>]*)>[\\s]*;[\\s]*rel=\"([a-zA-Z0-9]+)\"");
     private static final Pattern PAGE_PATTERN = Pattern.compile("\\bpage=(\\d+)");
@@ -49,7 +50,7 @@ public class ApiResponse<T> {
                 try {
                     message = response.errorBody().string();
                 } catch (IOException ignored) {
-                    Timber.e(ignored, "error while parsing response");
+                    Log.e(TAG, "error while parsing response" );
                 }
             }
             if (message == null || message.trim().length() == 0) {
@@ -90,7 +91,7 @@ public class ApiResponse<T> {
         try {
             return Integer.parseInt(matcher.group(1));
         } catch (NumberFormatException ex) {
-            Timber.w("cannot parse next page from %s", next);
+            Log.w(TAG, "cannot parse next page from "+ next );
             return null;
         }
     }

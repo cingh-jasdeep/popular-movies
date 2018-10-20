@@ -30,7 +30,7 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
         void onTrailerClick(MovieTrailerEntry trailerEntry);
     }
 
-    public MovieTrailersAdapter(Context context, MovieTrailerAdapterOnClickHandler clickHandler) {
+    MovieTrailersAdapter(Context context, MovieTrailerAdapterOnClickHandler clickHandler) {
         mContext = context;
         mClickHandler = clickHandler;
         mShortAnimationDuration = mContext.getResources().getInteger(
@@ -45,7 +45,7 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
     public class MovieTrailerAdapterViewHolder extends RecyclerView.ViewHolder
             implements View.OnClickListener{
 
-        public final TextView mTrailerTitleTextView;
+        final TextView mTrailerTitleTextView;
         public final ImageView mTrailerPlayIcon;
         public final View mItemView;
 
@@ -126,6 +126,13 @@ public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdap
     public int getItemCount() {
         if(mTrailersData == null) { return 0; }
         return mTrailersData.size();
+    }
+
+    /**
+     * Returns all trailer data
+     * **/
+    public List<MovieTrailerEntry> getMovieTrailerData() {
+        return mTrailersData;
     }
 
     /**
