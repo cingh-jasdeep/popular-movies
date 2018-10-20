@@ -25,7 +25,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import example.android.com.popularmovies.api.ApiResponse;
+import example.android.com.popularmovies.api.response_models.ApiResponse;
 import retrofit2.CallAdapter;
 import retrofit2.Retrofit;
 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ImageView
+            android:id="@+id/iv_divider_reviews_list"
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:contentDescription="@string/a11y_content_divider"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@color/cardview_dark_background" />
+
+        <TextView
+            android:id="@+id/tv_review_list_heading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/text_reviews_list_heading"
+            android:textAppearance="@style/Base.TextAppearance.AppCompat.Medium"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/iv_divider_reviews_list" />
+        <!--https://stackoverflow.com/questions/45397199/android-recylerview-in-constraintlayout-doesnt-scroll-->
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_reviews_movie_detail"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tv_review_list_heading"
+            tools:itemCount="4"
+            tools:listitem="@layout/review_item" />
+
+    </android.support.constraint.ConstraintLayout>
+
+</layout>

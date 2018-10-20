@@ -7,23 +7,30 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import example.android.com.popularmovies.AppExecutors;
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.api.ApiResponse;
-import example.android.com.popularmovies.api.MovieListingResponse;
+import example.android.com.popularmovies.api.response_models.ApiResponse;
+import example.android.com.popularmovies.api.response_models.MovieListingResponse;
 import example.android.com.popularmovies.api.TMDbService;
 import example.android.com.popularmovies.api.TMDbServiceClient;
+import example.android.com.popularmovies.api.response_models.MovieReviewListResponse;
+import example.android.com.popularmovies.api.response_models.MovieVideoListResponse;
+import example.android.com.popularmovies.api.response_models.MovieVideoResponseEntry;
 import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
+import example.android.com.popularmovies.data.ReviewQuery;
+import example.android.com.popularmovies.data.TrailerQuery;
 import example.android.com.popularmovies.db.AppDatabase;
-import example.android.com.popularmovies.db.MovieDao;
-import example.android.com.popularmovies.db.MovieReviewDao;
-import example.android.com.popularmovies.db.MovieTrailerDao;
-import example.android.com.popularmovies.model.MovieEntry;
-import example.android.com.popularmovies.model.MovieTrailerEntry;
+import example.android.com.popularmovies.db.dao.MovieDao;
+import example.android.com.popularmovies.db.dao.MovieReviewDao;
+import example.android.com.popularmovies.db.dao.MovieTrailerDao;
+import example.android.com.popularmovies.db.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieReviewEntry;
+import example.android.com.popularmovies.db.model.MovieTrailerEntry;
 import example.android.com.popularmovies.utilities.PosterHelper;
 import example.android.com.popularmovies.utilities.Resource;
 
@@ -31,6 +38,8 @@ import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_FA
 import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_TRUE;
 import static example.android.com.popularmovies.data.Constant.NETWORK_UPDATE_THRESHOLD_IN_HOURS;
 import static example.android.com.popularmovies.data.Constant.TMDB_API_KEY;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE;
+import static example.android.com.popularmovies.data.Constant.TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER;
 
 public class MovieRepository {
 
@@ -76,14 +85,24 @@ public class MovieRepository {
         return mMovieDao.loadMovieById(movieId);
     }
 
-    public LiveData<List<MovieTrailerEntry>> loadTrailersByMovieId(int movieId) {
+    public LiveData<List<MovieTrailerEntry>> getTrailersByMovieId(int movieId) {
         Log.d(TAG, "Actively retrieving trailers for a specific movie from the DataBase in Repository");
         return mTrailerDao.loadTrailersByMovieId(movieId);
+    }
+
+    public LiveData<List<MovieReviewEntry>> getReviewsByMovieId(int movieId) {
+        Log.d(TAG, "Actively retrieving reviews for a specific movie from the DataBase in Repository");
+        return mReviewDao.loadReviewsByMovieId(movieId);
     }
 
     public LiveData<List<MovieEntry>> getFavoriteMovies() {
         Log.d(TAG, "Actively retrieving favorite movies from the DataBase in Repo");
         return mMovieDao.getFavoriteMovies();
+    }
+
+    public List<MovieEntry> getFavoriteMoviesOneShot() {
+        Log.d(TAG, "Actively retrieving favorite movies in one shot from the DataBase in Repo");
+        return mMovieDao.getFavoriteMoviesOneShot();
     }
 
     public LiveData<List<MovieEntry>> getPopularMovies() {
@@ -197,8 +216,11 @@ public class MovieRepository {
                     //extract movie list from response object
                     List<MovieEntry> moviesFetchedFromNetwork = responseData.getResults();
 
-                    //return if no movies fetched
-                    if (moviesFetchedFromNetwork.size() == 0) {
+                    //if no movies fetched from network even after successful network transaction
+                    if (moviesFetchedFromNetwork!=null &&
+                            moviesFetchedFromNetwork.size() == 0) {
+                        if(isTopRated) { mMovieDao.deleteAllTopRatedMoviesExceptFavorites(); }
+                        else { mMovieDao.deleteAllPopularMoviesExceptFavorites(); }
                         return;
                     }
 
@@ -240,7 +262,7 @@ public class MovieRepository {
                 protected boolean shouldFetch(@Nullable List<MovieEntry> data) {
                     if(data == null || data.size() == 0 || forceUpdate) { return true; }
                     else {
-                        return !isFresh(data, NETWORK_UPDATE_THRESHOLD_IN_HOURS);
+                        return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
                     }
                 }
 
@@ -276,9 +298,9 @@ public class MovieRepository {
         entry.setIsFavorite(MOVIE_ATTR_FLAG_FALSE);
     }
 
-    private boolean isFresh(@NonNull List<MovieEntry> data, long networkUpdateThresholdInHours) {
+    private boolean isFresh(@NonNull long dataUpdatedTimeMillis, long networkUpdateThresholdInHours) {
         long timeSinceLastNetworkUpdate =
-                System.currentTimeMillis() - data.get(0).getUpdatedAt();
+                System.currentTimeMillis() - dataUpdatedTimeMillis;
         return TimeUnit.HOURS.toMillis(networkUpdateThresholdInHours) >
                 timeSinceLastNetworkUpdate;
     }
@@ -291,7 +313,7 @@ public class MovieRepository {
     }
 
     private void adjustFavoriteMovies(List<MovieEntry> moviesFetchedFromNetwork) {
-        List<MovieEntry> favoriteMovies = mMovieDao.getFavoriteMovies().getValue();
+        List<MovieEntry> favoriteMovies = mMovieDao.getFavoriteMoviesOneShot();
 
         if (favoriteMovies != null && favoriteMovies.size() != 0) {
             for (MovieEntry favoriteMovie :
@@ -318,4 +340,198 @@ public class MovieRepository {
         }
         return -1;
     }
+
+    public void setIsFavorite(int isFavorite, int movieId, FavoriteMarkedListener listener) {
+        if(isFavorite == MOVIE_ATTR_FLAG_TRUE || isFavorite == MOVIE_ATTR_FLAG_FALSE) {
+            AppExecutors.getInstance().diskIO().execute(() -> {
+                mMovieDao.setIsFavorite(isFavorite, movieId);
+                if( listener != null && isFavorite == MOVIE_ATTR_FLAG_TRUE) {
+                    listener.onFavoriteMarkedSaved(true);
+                }
+            });
+        }
+    }
+
+
+
+    public interface FavoriteMarkedListener {
+        void onFavoriteMarkedSaved(boolean favoriteMarked);
+    }
+
+
+    //db access functions for movie details
+
+    public LiveData<Resource<MovieEntry>> loadMovieById(int movieId) {
+        AppExecutors appExecutors = AppExecutors.getInstance();
+
+        return new NetworkBoundResource<MovieEntry,MovieEntry>(appExecutors) {
+
+            //get results only offline
+            //so shouldFetch is false and createCall, saveCallResult are not used
+
+            @Override
+            protected void saveCallResult(@NonNull MovieEntry data) { }
+
+            @Override
+            protected boolean shouldFetch(@Nullable MovieEntry data) { return false; }
+
+            @NonNull
+            @Override
+            protected LiveData<MovieEntry> loadFromDb() { return getMovieById(movieId); }
+
+            @NonNull
+            @Override
+            protected LiveData<ApiResponse<MovieEntry>> createCall() { return new MediatorLiveData<>(); }
+
+        }.asLiveData();
+    }
+
+    public LiveData<Resource<List<MovieTrailerEntry>>> loadTrailersByMovieId(TrailerQuery query) {
+
+        int movieId = query.getMovieId();
+        boolean forceUpdate = query.isForceUpdate();
+
+        AppExecutors appExecutors = AppExecutors.getInstance();
+
+
+        return new NetworkBoundResource<List<MovieTrailerEntry>, MovieVideoListResponse>(appExecutors) {
+
+            @Override
+            protected void saveCallResult(@NonNull MovieVideoListResponse responseData) {
+
+                //extract movie list from response object
+                List<MovieVideoResponseEntry> videosFetchedFromNetwork = responseData.getResults();
+
+                //if no videos fetched from network even after successful network transaction
+                if (videosFetchedFromNetwork != null
+                        && videosFetchedFromNetwork.size() == 0) {
+                    mTrailerDao.deleteAllByMovieId(movieId);
+                    return;
+                }
+
+                //filter for non trailers and non youtube items
+                //and store results in a MovieTrailerEntry list
+                List<MovieTrailerEntry> trailersFromNetwork =
+                        filterOutVideos(movieId, videosFetchedFromNetwork);
+
+                //update movie trailers in database
+                mTrailerDao.replaceTrailersForMovieId(trailersFromNetwork, movieId);
+
+            }
+
+            @Override
+            protected boolean shouldFetch(@Nullable List<MovieTrailerEntry> data) {
+                if(data == null || data.size() == 0 || forceUpdate) { return true; }
+                else {
+                    return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
+                }
+            }
+
+            @NonNull
+            @Override
+            protected LiveData<List<MovieTrailerEntry>> loadFromDb() {
+                return getTrailersByMovieId(movieId);
+            }
+
+            @NonNull
+            @Override
+            protected LiveData<ApiResponse<MovieVideoListResponse>> createCall() {
+                return mTmDbService.getMovieTrailers(movieId, TMDB_API_KEY);
+            }
+
+        }.asLiveData();
+
+    }
+
+    private List<MovieTrailerEntry> filterOutVideos(int movieId,
+                                                    @NonNull List<MovieVideoResponseEntry> videosFetchedFromNetwork) {
+
+        List<MovieTrailerEntry> filteredVideos = new ArrayList<>();
+
+        for (MovieVideoResponseEntry videoEntry:
+                videosFetchedFromNetwork) {
+            String site = videoEntry.getSite();
+            String type = videoEntry.getType();
+
+            if(TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE.equals(site)
+                    && TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER.equals(type)) {
+                //set updatedAt time to current time in millis
+                filteredVideos.add(new MovieTrailerEntry(movieId, videoEntry.getId(),
+                        videoEntry.getKey(), System.currentTimeMillis()));
+
+            }
+        }
+
+        return filteredVideos;
+    }
+
+    public LiveData<Resource<List<MovieReviewEntry>>> loadReviewsByMovieId(ReviewQuery query) {
+
+        int movieId = query.getMovieId();
+        boolean forceUpdate = query.isForceUpdate();
+
+        AppExecutors appExecutors = AppExecutors.getInstance();
+
+
+        return new NetworkBoundResource<List<MovieReviewEntry>, MovieReviewListResponse>(appExecutors) {
+
+            @Override
+            protected void saveCallResult(@NonNull MovieReviewListResponse responseData) {
+
+                //extract movie list from response object
+                List<MovieReviewEntry> reviewsFetchedFromNetwork = responseData.getResults();
+
+                //if no reviews fetched from network even after successful network transaction
+                if (reviewsFetchedFromNetwork != null
+                        && reviewsFetchedFromNetwork.size() == 0) {
+                    mReviewDao.deleteAllByMovieId(movieId);
+                    return;
+                }
+
+                //update movieId and updatedAt flag for all reviews
+                adjustReviewAttributes(movieId, reviewsFetchedFromNetwork);
+
+                //update movie trailers in database
+                mReviewDao.replaceReviewsForMovieId(reviewsFetchedFromNetwork, movieId);
+
+            }
+
+            @Override
+            protected boolean shouldFetch(@Nullable List<MovieReviewEntry> data) {
+                if(data == null || data.size() == 0 || forceUpdate) { return true; }
+                else {
+                    return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
+                }
+            }
+
+            @NonNull
+            @Override
+            protected LiveData<List<MovieReviewEntry>> loadFromDb() {
+                return getReviewsByMovieId(movieId);
+            }
+
+            @NonNull
+            @Override
+            protected LiveData<ApiResponse<MovieReviewListResponse>> createCall() {
+                return mTmDbService.getMovieReviews(movieId, TMDB_API_KEY);
+            }
+
+        }.asLiveData();
+
+    }
+
+    private void adjustReviewAttributes(int movieId,
+                                        @NonNull List<MovieReviewEntry> reviewsFetchedFromNetwork) {
+        for (MovieReviewEntry reviewEntry:
+             reviewsFetchedFromNetwork) {
+
+            //save movie id
+            reviewEntry.setMovieId(movieId);
+
+            //save updated at flag
+            reviewEntry.setUpdatedAt(System.currentTimeMillis());
+        }
+    }
+
+
 }

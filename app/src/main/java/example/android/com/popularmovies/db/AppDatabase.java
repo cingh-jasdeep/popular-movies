@@ -7,9 +7,12 @@ import android.arch.persistence.room.TypeConverters;
 import android.content.Context;
 import android.util.Log;
 
-import example.android.com.popularmovies.model.MovieEntry;
-import example.android.com.popularmovies.model.MovieReviewEntry;
-import example.android.com.popularmovies.model.MovieTrailerEntry;
+import example.android.com.popularmovies.db.dao.MovieDao;
+import example.android.com.popularmovies.db.dao.MovieReviewDao;
+import example.android.com.popularmovies.db.dao.MovieTrailerDao;
+import example.android.com.popularmovies.db.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieReviewEntry;
+import example.android.com.popularmovies.db.model.MovieTrailerEntry;
 
 import static example.android.com.popularmovies.data.Constant.APP_DATABASE_NAME;
 

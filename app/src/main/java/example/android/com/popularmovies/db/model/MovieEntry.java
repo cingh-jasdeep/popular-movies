@@ -1,9 +1,8 @@
-package example.android.com.popularmovies.model;
+package example.android.com.popularmovies.db.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.Ignore;
-import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -15,6 +14,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_FALSE;
+import static example.android.com.popularmovies.data.Constant.MOVIE_RUNTIME_DEFAULT;
 import static example.android.com.popularmovies.data.Constant.TMDB_DATE_FORMAT;
 
 /**
@@ -62,9 +62,11 @@ public class MovieEntry implements Parcelable {
 
     private long updatedAt;
 
+    private int runtime;
+
     public MovieEntry(int id, String movieTitle, Date releaseDate, String moviePosterUrl,
                       double voteAverage, String plotSynopsis, double popularityRating,
-                      int isFavorite, int isPopular, int isTopRated, long updatedAt) {
+                      int isFavorite, int isPopular, int isTopRated, long updatedAt, int runtime) {
         this.id = id;
         this.movieTitle = movieTitle;
         this.releaseDate = releaseDate;
@@ -77,6 +79,7 @@ public class MovieEntry implements Parcelable {
         this.isPopular = isPopular;
         this.isTopRated = isTopRated;
         this.updatedAt = updatedAt;
+        this.runtime = runtime;
     }
 
     @Ignore
@@ -94,6 +97,8 @@ public class MovieEntry implements Parcelable {
         this.isFavorite = MOVIE_ATTR_FLAG_FALSE;
         this.isPopular = MOVIE_ATTR_FLAG_FALSE;
         this.isTopRated = MOVIE_ATTR_FLAG_FALSE;
+        this.updatedAt = System.currentTimeMillis();
+        this.runtime = MOVIE_RUNTIME_DEFAULT;
     }
 
     public String toString() {
@@ -114,6 +119,7 @@ public class MovieEntry implements Parcelable {
         isPopular = in.readInt();
         isTopRated = in.readInt();
         updatedAt = in.readLong();
+        runtime = in.readInt();
     }
 
     // online reference: https://stackoverflow.com/questions/21017404/reading-and-writing-java-util-date-from-parcelable-class
@@ -131,6 +137,7 @@ public class MovieEntry implements Parcelable {
         dest.writeInt(isPopular);
         dest.writeInt(isTopRated);
         dest.writeLong(updatedAt);
+        dest.writeInt(runtime);
     }
 
     public static final Creator<MovieEntry> CREATOR = new Creator<MovieEntry>() {
@@ -237,6 +244,15 @@ public class MovieEntry implements Parcelable {
 
     public void setUpdatedAt(long updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+
+    public int getRuntime() {
+        return runtime;
+    }
+
+    public void setRuntime(int runtime) {
+        this.runtime = runtime;
     }
 
 

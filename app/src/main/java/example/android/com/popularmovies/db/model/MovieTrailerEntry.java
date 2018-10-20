@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.model;
+package example.android.com.popularmovies.db.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
@@ -26,10 +26,13 @@ public class MovieTrailerEntry {
     @ColumnInfo(name = "url_key")
     private String ytUrlKey;
 
-    public MovieTrailerEntry(int movieId, @NonNull String id, String ytUrlKey) {
+    private long updatedAt;
+
+    public MovieTrailerEntry(int movieId, @NonNull String id, String ytUrlKey, long updatedAt) {
         this.movieId = movieId;
         this.id = id;
         this.ytUrlKey = ytUrlKey;
+        this.updatedAt = updatedAt;
     }
 
     //getters and setters
@@ -58,5 +61,14 @@ public class MovieTrailerEntry {
     public void setYtUrlKey(String ytUrlKey) {
         this.ytUrlKey = ytUrlKey;
     }
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
 
 }

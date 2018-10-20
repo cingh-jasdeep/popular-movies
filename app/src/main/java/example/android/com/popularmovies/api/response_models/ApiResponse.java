@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.api;
+package example.android.com.popularmovies.api.response_models;
 
 
 import android.support.annotation.NonNull;

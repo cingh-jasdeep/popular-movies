@@ -6,7 +6,6 @@ import android.arch.lifecycle.AndroidViewModel;
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.Transformations;
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import java.util.List;
@@ -14,7 +13,7 @@ import java.util.List;
 import example.android.com.popularmovies.data.MovieQuery;
 import example.android.com.popularmovies.data.MoviesPreferences;
 import example.android.com.popularmovies.db.AppDatabase;
-import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieEntry;
 import example.android.com.popularmovies.data.repository.MovieRepository;
 import example.android.com.popularmovies.utilities.Resource;
 

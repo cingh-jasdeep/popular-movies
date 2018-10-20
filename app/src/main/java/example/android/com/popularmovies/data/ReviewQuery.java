@@ -1,27 +1,26 @@
 package example.android.com.popularmovies.data;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
 /**
  * query object to query movies from async task loader
  */
 
-public class MovieQuery {
-    private String sortOrder; // sort order
+public class ReviewQuery {
+
+    private int movieId;
     private boolean forceUpdate;
 
-    public MovieQuery(String sortOrder, boolean forceUpdate) {
-        this.sortOrder = sortOrder;
+    public ReviewQuery(int movieId, boolean forceUpdate) {
+        this.movieId = movieId;
         this.forceUpdate = forceUpdate;
     }
 
-    public String getSortOrder() {
-        return sortOrder;
+
+    public int getMovieId() {
+        return movieId;
     }
 
-    public void setSortOrder(String sortOrder) {
-        this.sortOrder = sortOrder;
+    public void setMovieId(int movieId) {
+        this.movieId = movieId;
     }
 
     public boolean isForceUpdate() {

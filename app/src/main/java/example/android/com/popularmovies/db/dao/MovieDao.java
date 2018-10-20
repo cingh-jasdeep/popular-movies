@@ -1,4 +1,4 @@
-package example.android.com.popularmovies.db;
+package example.android.com.popularmovies.db.dao;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.persistence.room.Dao;
@@ -8,7 +8,7 @@ import android.arch.persistence.room.Transaction;
 
 import java.util.List;
 
-import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieEntry;
 
 import static android.arch.persistence.room.OnConflictStrategy.REPLACE;
 import static example.android.com.popularmovies.data.Constant.MOVIE_ATTR_FLAG_TRUE;
@@ -24,6 +24,7 @@ public abstract class MovieDao {
             + " ORDER BY vote_average DESC")
     public abstract LiveData<List<MovieEntry>> getTopRatedMovies();
 
+
     @Query("SELECT * FROM movie WHERE isPopular = " + MOVIE_ATTR_FLAG_TRUE
             + " ORDER BY popularity_rating DESC")
     public abstract LiveData<List<MovieEntry>> getPopularMovies();
@@ -31,17 +32,32 @@ public abstract class MovieDao {
     @Query("SELECT * FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract LiveData<List<MovieEntry>> getFavoriteMovies();
 
+    @Query("SELECT * FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE)
+    public abstract List<MovieEntry> getFavoriteMoviesOneShot();
+
     @Query("DELETE FROM movie ")
     public abstract void deleteAll();
 
     @Query("DELETE FROM movie WHERE isTopRated = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllTopRatedMovies();
 
+    @Query("DELETE FROM movie WHERE isTopRated = " + MOVIE_ATTR_FLAG_TRUE
+            +" AND isPopular != "+ MOVIE_ATTR_FLAG_TRUE)
+    public abstract void deleteAllTopRatedMoviesExceptFavorites();
+
     @Query("DELETE FROM movie WHERE isPopular = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllPopularMovies();
 
+    @Query("DELETE FROM movie WHERE isPopular = " + MOVIE_ATTR_FLAG_TRUE
+                +" AND isPopular != "+ MOVIE_ATTR_FLAG_TRUE)
+    public abstract void deleteAllPopularMoviesExceptFavorites();
+
     @Query("DELETE FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllFavoriteMovies();
+
+    @Query("UPDATE movie SET isFavorite = :favoriteValue WHERE id = :movieId")
+    public abstract void setIsFavorite(int favoriteValue, int movieId);
+
 
     @Insert(onConflict = REPLACE)
     public abstract void insertAll(List<MovieEntry> movieEntries);

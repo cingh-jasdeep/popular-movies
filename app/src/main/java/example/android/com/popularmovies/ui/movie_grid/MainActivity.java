@@ -20,14 +20,12 @@
  */
 package example.android.com.popularmovies.ui.movie_grid;
 
-import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
@@ -41,9 +39,6 @@ import android.view.View;
 import android.widget.TextView;
 
 
-import com.facebook.stetho.Stetho;
-import com.zplesac.connectionbuddy.ConnectionBuddy;
-import com.zplesac.connectionbuddy.ConnectionBuddyConfiguration;
 import com.zplesac.connectionbuddy.interfaces.ConnectivityChangeListener;
 import com.zplesac.connectionbuddy.models.ConnectivityEvent;
 import com.zplesac.connectionbuddy.models.ConnectivityState;
@@ -51,13 +46,11 @@ import com.zplesac.connectionbuddy.models.ConnectivityState;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieEntry;
 import example.android.com.popularmovies.data.MoviesPreferences;
-import example.android.com.popularmovies.sync.MovieSyncUtilities;
-import example.android.com.popularmovies.sync.MoviesSyncTasks;
 import example.android.com.popularmovies.ui.settings.SettingsActivity;
 import example.android.com.popularmovies.ui.movie_details.MovieDetailsActivity;
-import example.android.com.popularmovies.utilities.Resource;
+import example.android.com.popularmovies.utilities.ConnectionBuddyUtilsForActivities;
 
 import static example.android.com.popularmovies.data.Constant.EXTRA_MOVIE_ID;
 
@@ -101,10 +94,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //debugging with stetho
-        Stetho.initializeWithDefaults(this);
-        //detect changes in network connection
-        setupConnectionBuddy();
+        ConnectionBuddyUtilsForActivities.clearConnectionBuddyState(savedInstanceState, this);
 
         //setup ui components including recyclerview
         setupUiComponents();
@@ -115,7 +105,7 @@ public class MainActivity extends AppCompatActivity
         PreferenceManager.getDefaultSharedPreferences(this)
                 .registerOnSharedPreferenceChangeListener(this);
 
-        // send out intent service to update database using given preferences
+        mSwipeRefreshLayout.setRefreshing(true);
         loadMovieData(false, false);
 
     }
@@ -134,11 +124,6 @@ public class MainActivity extends AppCompatActivity
          */
         mSwipeRefreshLayout = findViewById(R.id.srl_rv_movies);
         mSwipeRefreshLayout.setOnRefreshListener(this);
-    }
-
-    private void setupConnectionBuddy() {
-        ConnectionBuddyConfiguration networkInspectorConfiguration = new ConnectionBuddyConfiguration.Builder(this).build();
-        ConnectionBuddy.getInstance().init(networkInspectorConfiguration);
     }
 
     @Override
@@ -160,7 +145,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStart() {
         super.onStart();
-        ConnectionBuddy.getInstance().registerForConnectivityEvents(this, this);
+        ConnectionBuddyUtilsForActivities.registerConnectionBuddyEvents(this, this);
 
         if(mSortPrefUpdate) {
             mSortPrefUpdate = false;
@@ -171,8 +156,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onStop() {
         super.onStop();
-        ConnectionBuddy.getInstance().unregisterFromConnectivityEvents(this);
+
+        ConnectionBuddyUtilsForActivities.unregisterConnectionBuddyEvents(this);
     }
+
+
 
     private void showRefreshUi(boolean bool) {
         mSwipeRefreshLayout.setEnabled(bool);
@@ -193,25 +181,22 @@ public class MainActivity extends AppCompatActivity
             String sortOrder = MoviesPreferences.getPreferredSortOrder(this);
             mViewModel.updateQuery(sortOrder, forceUpdate);
         }
-        mViewModel.displayMovies.observe(this, new Observer<Resource<List<MovieEntry>>>() {
-            @Override
-            public void onChanged(@Nullable Resource<List<MovieEntry>> listResource) {
-                Log.d(TAG, "Updating movies display from LiveData in ViewModel");
-                if(listResource != null) {
-                    switch (listResource.status) {
-                        case ERROR: {
-                            Log.i(TAG, "onChanged: [error] " + listResource.message);
-                            showMoviesData(listResource.data, false);
-                            break;
-                        }
-                        case LOADING: {
-                            showMoviesData(listResource.data, true);
-                            break;
-                        }
-                        case SUCCESS: {
-                            showMoviesData(listResource.data, false);
-                            break;
-                        }
+        mViewModel.displayMovies.observe(this, listResource -> {
+            Log.d(TAG, "Updating movies display from LiveData in ViewModel");
+            if(listResource != null) {
+                switch (listResource.status) {
+                    case ERROR: {
+                        Log.i(TAG, "onChanged: [error] " + listResource.message);
+                        showMoviesData(listResource.data, false);
+                        break;
+                    }
+                    case LOADING: {
+                        showMoviesData(listResource.data, true);
+                        break;
+                    }
+                    case SUCCESS: {
+                        showMoviesData(listResource.data, false);
+                        break;
                     }
                 }
             }
@@ -333,6 +318,7 @@ public class MainActivity extends AppCompatActivity
     public void onConnectionChange(ConnectivityEvent event) {
         boolean isConnected = event.getState() == ConnectivityState.CONNECTED;
         showRefreshUi(isConnected);
+        loadMovieData(false,false);
         showConnectionSnackBar(isConnected);
     }
 

@@ -1,10 +1,10 @@
-package example.android.com.popularmovies.api;
+package example.android.com.popularmovies.api.response_models;
 
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieEntry;
 
 public class MovieListingResponse {
 

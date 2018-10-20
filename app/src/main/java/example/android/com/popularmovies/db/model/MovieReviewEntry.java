@@ -1,10 +1,11 @@
-package example.android.com.popularmovies.model;
+package example.android.com.popularmovies.db.model;
 
 import android.arch.persistence.room.ColumnInfo;
 import android.arch.persistence.room.Entity;
 import android.arch.persistence.room.ForeignKey;
 import android.arch.persistence.room.Index;
 import android.arch.persistence.room.PrimaryKey;
+import android.support.annotation.NonNull;
 
 @Entity(tableName = "movie_review",
         foreignKeys = @ForeignKey(entity = MovieEntry.class,
@@ -15,8 +16,9 @@ import android.arch.persistence.room.PrimaryKey;
 
 public class MovieReviewEntry {
 
+    @NonNull
     @PrimaryKey
-    private int id;
+    private String id;
 
     @ColumnInfo(name = "movie_id")
     private int movieId;
@@ -27,21 +29,25 @@ public class MovieReviewEntry {
 
     private String url;
 
-    public MovieReviewEntry(int id, int movieId, String author, String content, String url) {
+    private long updatedAt;
+
+    public MovieReviewEntry(String id, int movieId, String author,
+                            String content, String url, long updatedAt) {
         this.id = id;
         this.movieId = movieId;
         this.author = author;
         this.content = content;
         this.url = url;
+        this.updatedAt = updatedAt;
     }
 
     //getters and setters
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -75,5 +81,14 @@ public class MovieReviewEntry {
 
     public void setUrl(String url) {
         this.url = url;
+    }
+
+
+    public long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

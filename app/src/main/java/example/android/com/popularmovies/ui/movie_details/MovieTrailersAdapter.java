@@ -13,24 +13,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.model.MovieTrailerEntry;
+import example.android.com.popularmovies.db.model.MovieTrailerEntry;
+import example.android.com.popularmovies.ui.movie_grid.MoviesAdapter;
 
-public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapter.MovieTrailerAdapterViewHolder>{
+public class MovieTrailersAdapter extends RecyclerView.Adapter<MovieTrailersAdapter.MovieTrailerAdapterViewHolder>{
 
     private List<MovieTrailerEntry> mTrailersData;
     private Context mContext;
     private MovieTrailerAdapterOnClickHandler mClickHandler;
+    private int mShortAnimationDuration;
 
     /**
      * click handler to get movie object at a particular position
      */
     public interface MovieTrailerAdapterOnClickHandler {
-        void onClick(MovieTrailerEntry trailerEntry);
+        void onTrailerClick(MovieTrailerEntry trailerEntry);
     }
 
-    public MovieTrailerAdapter(Context context, MovieTrailerAdapterOnClickHandler clickHandler) {
+    public MovieTrailersAdapter(Context context, MovieTrailerAdapterOnClickHandler clickHandler) {
         mContext = context;
         mClickHandler = clickHandler;
+        mShortAnimationDuration = mContext.getResources().getInteger(
+                android.R.integer.config_longAnimTime);
     }
 
     /**
@@ -43,19 +47,21 @@ public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapte
 
         public final TextView mTrailerTitleTextView;
         public final ImageView mTrailerPlayIcon;
+        public final View mItemView;
 
         public MovieTrailerAdapterViewHolder(View itemView) {
             super(itemView);
             mTrailerTitleTextView = itemView.findViewById(R.id.tv_trailer_title);
             mTrailerPlayIcon = itemView.findViewById(R.id.iv_trailer_play_icon);
             itemView.setOnClickListener(this);
+            mItemView = itemView;
         }
 
         @Override
         public void onClick(View v) {
             if(mTrailersData!=null) {
                 MovieTrailerEntry trailerEntry = mTrailersData.get(getAdapterPosition());
-                mClickHandler.onClick(trailerEntry);
+                mClickHandler.onTrailerClick(trailerEntry);
             }
         }
     }
@@ -73,6 +79,7 @@ public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapte
         int layoutForItem = R.layout.trailer_item;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(layoutForItem, parent, false);
+        view.setVisibility(View.GONE);
         return new MovieTrailerAdapterViewHolder(view);
     }
 
@@ -86,14 +93,29 @@ public class MovieTrailerAdapter extends RecyclerView.Adapter<MovieTrailerAdapte
         MovieTrailerEntry trailer = mTrailersData.get(position);
         if(trailer != null) {
             String trailerTitleFormatted = String.format(
-                    mContext.getString(R.string.trailer_title_format), Integer.toString(position));
+                    mContext.getString(R.string.trailer_title_format), Integer.toString(position+1));
 
             holder.mTrailerTitleTextView.setText(trailerTitleFormatted);
 
             String trailerTitleA11y = String.format(mContext.getString(R.string.a11y_play_movie_trailer_formatted),
                     Integer.toString(position));
             holder.mTrailerPlayIcon.setContentDescription(trailerTitleA11y);
+            fadeInItem(holder);
         }
+    }
+
+    private void fadeInItem(@NonNull MovieTrailerAdapterViewHolder holder) {
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
+        holder.mItemView.setAlpha(0f);
+        holder.mItemView.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+        holder.mItemView.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
     }
 
     /**

@@ -29,13 +29,14 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.squareup.picasso.Callback;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.model.MovieEntry;
+import example.android.com.popularmovies.db.model.MovieEntry;
 
 /**
  *  Exposes a list of movies to a RecyclerView
@@ -46,6 +47,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     private List<MovieEntry> mMoviesData;
     private Context mContext;
     private MoviesAdapterOnClickHandler mClickHandler;
+    private int mShortAnimationDuration;
 
     /**
      * click handler to get movie object at a particular position
@@ -57,6 +59,8 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     public MoviesAdapter(Context context, MoviesAdapterOnClickHandler clickHandler) {
         mContext = context;
         mClickHandler = clickHandler;
+        mShortAnimationDuration = mContext.getResources().getInteger(
+                android.R.integer.config_longAnimTime);
     }
 
     /**
@@ -68,10 +72,12 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
             implements View.OnClickListener{
 
         public final ImageView mPosterImageView;
+        public final View mItemView;
         public MoviesAdapterViewHolder(View itemView) {
             super(itemView);
             mPosterImageView = itemView.findViewById(R.id.iv_movie_poster);
-            itemView.setOnClickListener(this);
+            mItemView = itemView;
+            mItemView.setOnClickListener(this);
         }
 
         @Override
@@ -96,6 +102,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         int layoutForItem = R.layout.movie_item;
         LayoutInflater inflater = LayoutInflater.from(context);
         View view = inflater.inflate(layoutForItem, parent, false);
+        view.setVisibility(View.GONE);
         return new MoviesAdapterViewHolder(view);
     }
 
@@ -110,12 +117,33 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         if(movie!=null) {
             Picasso.with(mContext)
                     .load(movie.getMoviePosterUrl())
-                    .placeholder(R.mipmap.ic_launcher_round)
-                    .error(R.mipmap.ic_launcher_round)
-                    .into(holder.mPosterImageView);
+                    .into(holder.mPosterImageView, new Callback() {
+                        @Override
+                        public void onSuccess() {
+                            fadeInItem(holder);
+                        }
+                        @Override
+                        public void onError() {
+
+                        }
+                    });
             String posterA11y = String.format(mContext.getString(R.string.a11y_poster), movie.getMovieTitle());
             holder.mPosterImageView.setContentDescription(posterA11y);
         }
+    }
+
+    private void fadeInItem(@NonNull MoviesAdapterViewHolder holder) {
+        // Set the content view to 0% opacity but visible, so that it is visible
+        // (but fully transparent) during the animation.
+        holder.mItemView.setAlpha(0f);
+        holder.mItemView.setVisibility(View.VISIBLE);
+
+        // Animate the content view to 100% opacity, and clear any animation
+        // listener set on the view.
+        holder.mItemView.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
     }
 
     /**
@@ -132,7 +160,7 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
 //    /**
 //     * @param movies array of movie objects to be added to rv
 //     * **/
-//    public void setMovieTrailerData(MovieEntry[] movies) {
+//    public void setMovieReviewData(MovieEntry[] movies) {
 //        if(mMoviesData == null) { mMoviesData = new ArrayList<>();}
 //        mMoviesData.clear();
 //        //check argument

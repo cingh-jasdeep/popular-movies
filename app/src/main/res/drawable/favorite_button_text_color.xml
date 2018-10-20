@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--refrence https://stackoverflow.com/questions/4692642/android-customized-button-changing-text-color-->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:state_selected="false"
+        android:color="@color/colorPrimaryDark" />
+
+    <item
+        android:state_selected="true"
+        android:color="@color/white" />
+
+    <!-- Default color -->
+    <item android:color="@color/colorPrimaryDark" />
+
+</selector>

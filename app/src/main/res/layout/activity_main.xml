@@ -23,13 +23,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!--using autofit recycler view from https://github.com/chiuki/android-recyclerview-->
     <android.support.v4.widget.SwipeRefreshLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/srl_rv_movies"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+        <!--using autofit recycler view from https://github.com/chiuki/android-recyclerview-->
         <example.android.com.popularmovies.utilities.AutofitRecyclerView
             android:id="@+id/rv_movies"
             android:layout_width="match_parent"

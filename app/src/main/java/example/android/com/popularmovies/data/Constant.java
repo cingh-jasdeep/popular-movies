@@ -54,6 +54,7 @@ public class Constant {
      */
     public final static int MOVIE_ATTR_FLAG_TRUE = 1;
     public final static int MOVIE_ATTR_FLAG_FALSE = 0;
+    public final static int MOVIE_RUNTIME_DEFAULT = -1;
 
     /*
      * constants used by database

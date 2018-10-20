@@ -31,7 +31,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.WorkerThread;
 
 import example.android.com.popularmovies.AppExecutors;
-import example.android.com.popularmovies.api.ApiResponse;
+import example.android.com.popularmovies.api.response_models.ApiResponse;
 import example.android.com.popularmovies.utilities.Objects;
 import example.android.com.popularmovies.utilities.Resource;
 
