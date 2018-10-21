@@ -1,6 +1,6 @@
 ## Waheguru Ja Khalsa Waheguru Ji Ki Fateh
 
-# isPopular-movies
+# Popular-movies
 
 This is 
 *Popular Movies* a project for online course
