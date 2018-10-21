@@ -2,6 +2,7 @@ package example.android.com.popularmovies.ui.movie_details;
 
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Intent;
+import android.databinding.DataBindingUtil;
 import android.net.Uri;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
@@ -22,6 +23,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 import com.zplesac.connectionbuddy.interfaces.ConnectivityChangeListener;
 import com.zplesac.connectionbuddy.models.ConnectivityEvent;
@@ -32,6 +35,7 @@ import java.util.List;
 
 import example.android.com.popularmovies.R;
 import example.android.com.popularmovies.data.repository.MovieRepository;
+import example.android.com.popularmovies.databinding.ActivityMovieDetailsBinding;
 import example.android.com.popularmovies.db.model.MovieEntry;
 import example.android.com.popularmovies.db.model.MovieReviewEntry;
 import example.android.com.popularmovies.db.model.MovieTrailerEntry;
@@ -51,7 +55,8 @@ public class MovieDetailsActivity extends AppCompatActivity
     MovieTrailersAdapter.MovieTrailerAdapterOnClickHandler, View.OnClickListener
     , MovieRepository.FavoriteMarkedListener, SwipeRefreshLayout.OnRefreshListener {
 
-//    public static final String EXTRA_MOVIE = "extra_movie";
+    /* Movie Details binding variable */
+    private ActivityMovieDetailsBinding mDetailsBinding;
 
 
     private static final String TAG = MovieDetailsActivity.class.getSimpleName();
@@ -61,17 +66,8 @@ public class MovieDetailsActivity extends AppCompatActivity
     private MovieEntry mCurrMovieEntry;
 
 
-    /* MovieEntry Details Ui variables */
-    private SwipeRefreshLayout mMainSwipeRefreshLayout;
-    private NestedScrollView mMainScrollView;
-    private TextView mMovieTitleTextView;
-    private ImageView mMovieDetailPosterImageView;
-    private TextView mMovieReleaseDateTextView;
-    private TextView mMovieVoteAverageTextView;
-    private TextView mMoviePlotSynopsisTextView;
     private MenuItem mRefreshMenuItem;
 
-    private Button mMovieFavoriteButton;
     // Constants for favorite button
 
     public static final int FAVORITE_FALSE = MOVIE_ATTR_FLAG_FALSE;
@@ -80,15 +76,9 @@ public class MovieDetailsActivity extends AppCompatActivity
     private int mFavoriteButtonState = FAVORITE_FALSE;
 
 
-    private RecyclerView mTrailerRecyclerView;
-    private RecyclerView mReviewRecyclerView;
-
     private MovieTrailersAdapter mMovieTrailersAdapter;
     private MovieReviewsAdapter mMovieReviewsAdapter;
 
-
-    private View mTrailerView;
-    private View mReviewView;
 
     private Snackbar mSnackBar;
 
@@ -98,6 +88,8 @@ public class MovieDetailsActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
+
+        mDetailsBinding = DataBindingUtil.setContentView(this, R.layout.activity_movie_details);
 
         ConnectionBuddyUtilsForActivities.clearConnectionBuddyState(savedInstanceState, this);
 
@@ -113,7 +105,6 @@ public class MovieDetailsActivity extends AppCompatActivity
             if (mCurrMovieId == DEFAULT_MOVIE_ID) {
                 //populate UI
                 mCurrMovieId = intent.getIntExtra(EXTRA_MOVIE_ID, DEFAULT_MOVIE_ID);
-//                MoviesPreferences.saveCurrentMovieId(getApplicationContext(), mCurrMovieId);
             }
 
             loadMovieData(false);
@@ -136,9 +127,13 @@ public class MovieDetailsActivity extends AppCompatActivity
         ConnectionBuddyUtilsForActivities.unregisterConnectionBuddyEvents(this);
     }
 
+    /**
+     * loads movie data from viewmodel and sets observers for new data
+     * @param forceRefresh indicates whether the data needs to be refreshed online
+     */
     private void loadMovieData(boolean forceRefresh) {
 
-        mMainSwipeRefreshLayout.setRefreshing(true);
+        mDetailsBinding.srlMovieDetailMainView.setRefreshing(true);
 
         MovieDetailsViewModelFactory viewModelFactory = new MovieDetailsViewModelFactory(getApplication(), mCurrMovieId);
 
@@ -159,7 +154,7 @@ public class MovieDetailsActivity extends AppCompatActivity
                         break;
                     }
                     case LOADING: {
-                        mMainSwipeRefreshLayout.setRefreshing(true);
+                        mDetailsBinding.srlMovieDetailMainView.setRefreshing(true);
                         populateUI(movieEntryResource.data, true);
                         break;
                     }
@@ -181,7 +176,7 @@ public class MovieDetailsActivity extends AppCompatActivity
                         break;
                     }
                     case LOADING: {
-                        mMainSwipeRefreshLayout.setRefreshing(true);
+                        mDetailsBinding.srlMovieDetailMainView.setRefreshing(true);
                         showTrailerData(listResource.data, true);
                         break;
                     }
@@ -202,7 +197,7 @@ public class MovieDetailsActivity extends AppCompatActivity
                         break;
                     }
                     case LOADING: {
-                        mMainSwipeRefreshLayout.setRefreshing(true);
+                        mDetailsBinding.srlMovieDetailMainView.setRefreshing(true);
                         showReviewData(listResource.data, true);
                         break;
                     }
@@ -216,71 +211,96 @@ public class MovieDetailsActivity extends AppCompatActivity
 
     }
 
+    /**
+     * updates trailer data into the recycler view
+     * @param trailerEntries data for recycler view
+     * @param keepRefreshingUi indicates that data is still loading
+     */
     private void showTrailerData(List<MovieTrailerEntry> trailerEntries, boolean keepRefreshingUi) {
-        if(!keepRefreshingUi && mMainSwipeRefreshLayout.isRefreshing()) {
-            mMainSwipeRefreshLayout.setRefreshing(false);
+        if(!keepRefreshingUi && mDetailsBinding.srlMovieDetailMainView.isRefreshing()) {
+            mDetailsBinding.srlMovieDetailMainView.setRefreshing(false);
         }
         if (trailerEntries != null && trailerEntries.size() !=0 ) {
-            mTrailerView.setVisibility(View.VISIBLE);
+            mDetailsBinding.layoutTrailersList.getRoot().setVisibility(View.VISIBLE);
             mMovieTrailersAdapter.setMovieTrailerData(trailerEntries);
         } else {
-            mTrailerView.setVisibility(View.GONE);
+            mDetailsBinding.layoutTrailersList.getRoot().setVisibility(View.GONE);
         }
 
     }
 
+    /**
+     * updates review data into the recycler view
+     * @param reviewEntries data for recycler view
+     * @param keepRefreshingUi indicates that data is still loading
+     */
     private void showReviewData(List<MovieReviewEntry> reviewEntries, boolean keepRefreshingUi) {
-        if(!keepRefreshingUi && mMainSwipeRefreshLayout.isRefreshing()) {
-            mMainSwipeRefreshLayout.setRefreshing(false);
+        if(!keepRefreshingUi && mDetailsBinding.srlMovieDetailMainView.isRefreshing()) {
+            mDetailsBinding.srlMovieDetailMainView.setRefreshing(false);
         }
         if (reviewEntries != null && reviewEntries.size() !=0 ) {
-            mReviewView.setVisibility(View.VISIBLE);
+            mDetailsBinding.layoutReviewsList.getRoot().setVisibility(View.VISIBLE);
             mMovieReviewsAdapter.setMovieReviewData(reviewEntries);
         } else {
-            mReviewView.setVisibility(View.GONE);
+            mDetailsBinding.layoutReviewsList.getRoot().setVisibility(View.GONE);
         }
 
     }
 
+    /**
+     * populates movie details into ui
+     * @param movieEntry object to update ui
+     * @param keepRefreshingUi indicates that data is still loading
+     */
     private void populateUI(MovieEntry movieEntry, boolean keepRefreshingUi) {
-        if(!keepRefreshingUi && mMainSwipeRefreshLayout.isRefreshing()) {
-            mMainSwipeRefreshLayout.setRefreshing(false);
+        if(!keepRefreshingUi && mDetailsBinding.srlMovieDetailMainView.isRefreshing()) {
+            mDetailsBinding.srlMovieDetailMainView.setRefreshing(false);
         }
 
         if(movieEntry != null) {
             mCurrMovieEntry = movieEntry;
             String movieTitle = movieEntry.getMovieTitle();
             if (movieTitle != null && !(movieTitle.equals(""))) {
-                mMovieTitleTextView.setText(
+                mDetailsBinding.tvMovieTitle.setText(
                         movieTitle);
             }
 
             String moviePosterUrl = movieEntry.getMoviePosterUrl();
             if (moviePosterUrl != null && !(moviePosterUrl.equals(""))) {
+//                https://stackoverflow.com/questions/23391523/load-images-from-disk-cache-with-picasso-if-offline
                 Picasso.with(this)
                         .load(movieEntry.getMoviePosterUrl())
-                        .placeholder(R.mipmap.ic_launcher)
-                        .error(R.mipmap.ic_launcher)
-                        .into(mMovieDetailPosterImageView);
+                        .networkPolicy(NetworkPolicy.OFFLINE)
+                        .into(mDetailsBinding.ivMovieDetailPoster, new Callback() {
+                            @Override
+                            public void onSuccess() {
+                            }
+                            @Override
+                            public void onError() {
+                                Picasso.with(getApplicationContext())
+                                        .load(movieEntry.getMoviePosterUrl())
+                                        .into(mDetailsBinding.ivMovieDetailPoster);
+                            }
+                        });
             }
 
             Date releaseDate = movieEntry.getReleaseDate();
             if (releaseDate != null) {
-                mMovieReleaseDateTextView.setText(
+                mDetailsBinding.tvReleaseDate.setText(
                         MovieUtils.getFormattedDateString(this,
                                 releaseDate));
             }
 
             String movieVoteAverage = Double.toString(movieEntry.getVoteAverage());
             if (movieVoteAverage != null && !(movieVoteAverage.equals(""))) {
-                mMovieVoteAverageTextView.setText(
+                mDetailsBinding.tvVoteAverage.setText(
                         MovieUtils.getFormattedVoteString(this,
                                 movieVoteAverage));
             }
 
             String moviePlotSynopsis = movieEntry.getPlotSynopsis();
             if (moviePlotSynopsis != null && !(moviePlotSynopsis.equals(""))) {
-                mMoviePlotSynopsisTextView.setText(
+                mDetailsBinding.tvPlotSynopsis.setText(
                         moviePlotSynopsis);
             }
 
@@ -295,8 +315,12 @@ public class MovieDetailsActivity extends AppCompatActivity
         loadMovieData(true);
     }
 
+    /**
+     * used to toggle the refresh ui components for instances like no internet connection
+     * @param bool indicates where to show or hide refresh ui components
+     */
     private void showRefreshUi(boolean bool) {
-        mMainSwipeRefreshLayout.setEnabled(bool);
+        mDetailsBinding.srlMovieDetailMainView.setEnabled(bool);
         if(mRefreshMenuItem!=null) mRefreshMenuItem.setEnabled(bool);
     }
 
@@ -306,6 +330,9 @@ public class MovieDetailsActivity extends AppCompatActivity
         super.onSaveInstanceState(outState);
     }
 
+    /**
+     * initialize ui components properties like clickListener, recyclerView adapters and visibility
+     */
     private void initViews() {
         ActionBar actionBar = this.getSupportActionBar();
 
@@ -313,37 +340,24 @@ public class MovieDetailsActivity extends AppCompatActivity
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
-        mMainSwipeRefreshLayout = findViewById(R.id.srl_movie_detail_main_view);
-        mMainSwipeRefreshLayout.setOnRefreshListener(this);
-        mMainScrollView = findViewById(R.id.sc_movie_detail_main_view);
-        mMovieTitleTextView = findViewById(R.id.tv_movie_title);
-        mMovieDetailPosterImageView = findViewById(R.id.iv_movie_detail_poster);
-        mMovieReleaseDateTextView = findViewById(R.id.tv_release_date);
-        mMovieVoteAverageTextView = findViewById(R.id.tv_vote_average);
-        mMoviePlotSynopsisTextView = findViewById(R.id.tv_plot_synopsis);
-        mTrailerRecyclerView = findViewById(R.id.rv_trailers_movie_detail);
-        mReviewRecyclerView = findViewById(R.id.rv_reviews_movie_detail);
+        mDetailsBinding.srlMovieDetailMainView.setOnRefreshListener(this);
 
-        mMovieFavoriteButton = findViewById(R.id.button_favorite);
-
-        mMovieFavoriteButton.setOnClickListener(this);
+        mDetailsBinding.buttonFavorite.setOnClickListener(this);
 
         mMovieTrailersAdapter = new MovieTrailersAdapter(this, this);
         mMovieReviewsAdapter = new MovieReviewsAdapter(this);
 
-        mTrailerRecyclerView.setHasFixedSize(true);
-        mTrailerRecyclerView.setAdapter(mMovieTrailersAdapter);
-        mTrailerRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mDetailsBinding.layoutTrailersList.rvTrailersMovieDetail.setHasFixedSize(true);
+        mDetailsBinding.layoutTrailersList.rvTrailersMovieDetail.setAdapter(mMovieTrailersAdapter);
+        mDetailsBinding.layoutTrailersList.rvTrailersMovieDetail.setLayoutManager(new LinearLayoutManager(this));
 
-        mReviewRecyclerView.setHasFixedSize(true);
-        mReviewRecyclerView.setAdapter(mMovieReviewsAdapter);
-        mReviewRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mDetailsBinding.layoutReviewsList.rvReviewsMovieDetail.setHasFixedSize(true);
+        mDetailsBinding.layoutReviewsList.rvReviewsMovieDetail.setAdapter(mMovieReviewsAdapter);
+        mDetailsBinding.layoutReviewsList.rvReviewsMovieDetail.setLayoutManager(new LinearLayoutManager(this));
 
-        mTrailerView = findViewById(R.id.layout_trailers_list);
-        mReviewView = findViewById(R.id.layout_reviews_list);
 
-        mTrailerView.setVisibility(View.GONE);
-        mReviewView.setVisibility(View.GONE);
+        mDetailsBinding.layoutTrailersList.getRoot().setVisibility(View.GONE);
+        mDetailsBinding.layoutReviewsList.getRoot().setVisibility(View.GONE);
 
     }
 
@@ -372,6 +386,10 @@ public class MovieDetailsActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+
+    /**
+     * share first trailer link (if available) from trailer list
+     */
     private void shareFirstTrailerLink() {
         MovieTrailerEntry firstTrailer = mMovieTrailersAdapter.getMovieTrailerData().get(0);
         if(firstTrailer!=null && mCurrMovieEntry !=null) {
@@ -381,25 +399,30 @@ public class MovieDetailsActivity extends AppCompatActivity
                     + " #" + getString(R.string.app_name);
             shareText(textToShare);
         } else {
-            Snackbar.make(mMainScrollView, R.string.message_share_no_trailer, Snackbar.LENGTH_SHORT).show();
+            Snackbar.make(mDetailsBinding.svMovieDetailMainView, R.string.message_share_no_trailer, Snackbar.LENGTH_SHORT).show();
         }
     }
 
+    /**
+     * used when no movie data is available
+     */
     private void closeOnError() {
         finish();
-        Toast.makeText(this, R.string.detail_error_message, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, R.string.message_no_movie_data_error, Toast.LENGTH_SHORT).show();
     }
 
 
-
+    /**
+     * used to set favorite button ui when movie is set favorite/unFavorite
+     */
     private void setFavoriteButtonUi() {
         boolean isFavorite = mFavoriteButtonState == FAVORITE_TRUE;
         if(isFavorite) {
-            mMovieFavoriteButton.setText(R.string.button_text_favorite);
+            mDetailsBinding.buttonFavorite.setText(R.string.button_text_favorite);
         } else {
-            mMovieFavoriteButton.setText(R.string.button_text_mark_as_favorite);
+            mDetailsBinding.buttonFavorite.setText(R.string.button_text_mark_as_favorite);
         }
-        mMovieFavoriteButton.setSelected(isFavorite);
+        mDetailsBinding.buttonFavorite.setSelected(isFavorite);
     }
 
     @Override
@@ -409,6 +432,9 @@ public class MovieDetailsActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * toggle favorite state of the movie
+     */
     private void toggleFavorite() {
         //toggle state
 
@@ -430,6 +456,10 @@ public class MovieDetailsActivity extends AppCompatActivity
         showConnectionSnackBar(isConnected);
     }
 
+    /**
+     * show snackbar to indicate offline connectivity
+     * @param isConnected indicates whether application has active internet connection
+     */
     private void showConnectionSnackBar(boolean isConnected) {
         if (isConnected) {
             //hide snackbar
@@ -438,7 +468,7 @@ public class MovieDetailsActivity extends AppCompatActivity
             }
         } else {
             //show snackbar
-            mSnackBar = Snackbar.make(mMainScrollView, R.string.message_no_internet_detail, Snackbar.LENGTH_INDEFINITE);
+            mSnackBar = Snackbar.make(mDetailsBinding.svMovieDetailMainView, R.string.message_no_internet_refresh_disabled, Snackbar.LENGTH_INDEFINITE);
             mSnackBar.show();
         }
     }
@@ -482,6 +512,10 @@ public class MovieDetailsActivity extends AppCompatActivity
         }
     }
 
+    /**
+     * this method is used to share text using ShareCompat
+     * @param textToShare text to share to other apps
+     */
     void shareText(String textToShare) {
 
         String mimeType = "text/plain";
@@ -497,7 +531,7 @@ public class MovieDetailsActivity extends AppCompatActivity
 
     @Override
     public void onFavoriteMarkedSaved(boolean favoriteMarked) {
-        Snackbar.make(mMainScrollView, R.string.snackbar_message_favorite_marked, Snackbar.LENGTH_SHORT).show();
+        Snackbar.make(mDetailsBinding.svMovieDetailMainView, R.string.snackbar_message_favorite_marked, Snackbar.LENGTH_SHORT).show();
     }
 
 

@@ -30,6 +30,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 
 import com.squareup.picasso.Callback;
+import com.squareup.picasso.NetworkPolicy;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
@@ -115,8 +116,10 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
     public void onBindViewHolder(@NonNull MoviesAdapterViewHolder holder, int position) {
         MovieEntry movie = mMoviesData.get(position);
         if(movie!=null) {
+//            https://stackoverflow.com/questions/23391523/load-images-from-disk-cache-with-picasso-if-offline
             Picasso.with(mContext)
                     .load(movie.getMoviePosterUrl())
+                    .networkPolicy(NetworkPolicy.OFFLINE)
                     .into(holder.mPosterImageView, new Callback() {
                         @Override
                         public void onSuccess() {
@@ -124,7 +127,9 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                         }
                         @Override
                         public void onError() {
-
+                            Picasso.with(mContext)
+                                    .load(movie.getMoviePosterUrl())
+                                    .into(holder.mPosterImageView);
                         }
                     });
             String posterA11y = String.format(mContext.getString(R.string.a11y_poster), movie.getMovieTitle());
@@ -155,20 +160,6 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
         if(mMoviesData == null) { return 0; }
         return mMoviesData.size();
     }
-
-
-//    /**
-//     * @param movies array of movie objects to be added to rv
-//     * **/
-//    public void setMovieReviewData(MovieEntry[] movies) {
-//        if(mMoviesData == null) { mMoviesData = new ArrayList<>();}
-//        mMoviesData.clear();
-//        //check argument
-//        if (movies != null && movies.length != 0) {
-//            mMoviesData.addAll(Arrays.asList(movies));
-//        }
-//        notifyDataSetChanged();
-//    }
 
     /**
      * @param movies list of movie objects to be added to rv

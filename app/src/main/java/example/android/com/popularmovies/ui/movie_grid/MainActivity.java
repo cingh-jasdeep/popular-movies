@@ -332,7 +332,7 @@ public class MainActivity extends AppCompatActivity
 
             } else {
                 //show snackbar
-                mSnackBar = Snackbar.make(mSwipeRefreshLayout, R.string.message_no_internet_main, Snackbar.LENGTH_INDEFINITE);
+                mSnackBar = Snackbar.make(mSwipeRefreshLayout, R.string.message_no_internet_refresh_disabled, Snackbar.LENGTH_INDEFINITE);
                 mSnackBar.show();
             }
         }

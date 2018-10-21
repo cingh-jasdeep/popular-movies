@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
         <android.support.v4.widget.NestedScrollView
-            android:id="@+id/sc_movie_detail_main_view"
+            android:id="@+id/sv_movie_detail_main_view"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
@@ -62,10 +62,10 @@
                     android:layout_marginLeft="32dp"
                     android:layout_marginTop="8dp"
                     android:textColor="@color/colorPrimaryLight"
-                    android:textSize="22sp"
+                    android:textSize="20sp"
                     app:layout_constraintStart_toEndOf="@+id/iv_movie_detail_poster"
                     app:layout_constraintTop_toTopOf="@+id/iv_movie_detail_poster"
-                    tools:text="2005" />
+                    tools:text="20 October 1995" />
 
                 <TextView
                     android:id="@+id/tv_vote_average"
@@ -73,7 +73,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
                     android:textColor="@color/colorPrimaryDark"
-                    android:textSize="14sp"
+                    android:textSize="16sp"
                     app:layout_constraintStart_toStartOf="@+id/tv_release_date"
                     app:layout_constraintTop_toBottomOf="@+id/tv_release_date"
                     tools:text="8.1/10" />
