@@ -43,12 +43,16 @@ This project was build in 2 parts. Through this project, I learnt to:
 
 ## How I completeted this Project?
 - I followed a impelementation guide from Udacity (not open source) along with mockups
+
 - [Link](https://github.com/cingh-jasdeep/popular-movies/projects/1) to project to outline my workflow
+
 - Here are some screenshots
-<img src="/screenshots/movie_grid_view.png" width="100">
-<img src="/screenshots/movie_details.png" width="100">
-<img src="/screenshots/movie_trailers_screenshots.png" width="100">
-<img src="/screenshots/sort_order_setting.png" width="100">
+
+|<img src="/screenshots/movie_grid_view.png" width="150">|<img src="/screenshots/movie_details.png" width="150">|<img src="/screenshots/movie_trailers_screenshots.png" width="150">|<img src="/screenshots/sort_order_setting.png" width="150">|
+
+
+
+
 
 
 Please Note: 
