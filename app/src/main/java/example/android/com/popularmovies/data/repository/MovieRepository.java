@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 
 import example.android.com.popularmovies.AppExecutors;
 import example.android.com.popularmovies.R;
-import example.android.com.popularmovies.api.response_models.ApiResponse;
-import example.android.com.popularmovies.api.response_models.MovieListingResponse;
 import example.android.com.popularmovies.api.TMDbService;
 import example.android.com.popularmovies.api.TMDbServiceClient;
+import example.android.com.popularmovies.api.response_models.ApiResponse;
+import example.android.com.popularmovies.api.response_models.MovieListingResponse;
 import example.android.com.popularmovies.api.response_models.MovieReviewListResponse;
 import example.android.com.popularmovies.api.response_models.MovieVideoListResponse;
 import example.android.com.popularmovies.api.response_models.MovieVideoResponseEntry;
@@ -105,6 +105,16 @@ public class MovieRepository {
         return mMovieDao.getFavoriteMoviesOneShot();
     }
 
+    public List<MovieEntry> getFavoriteTopRatedMoviesOneShot() {
+        Log.d(TAG, "Actively retrieving favorite top rated movies in one shot from the DataBase in Repo");
+        return mMovieDao.getFavoriteTopRatedMoviesOneShot();
+    }
+
+    public List<MovieEntry> getFavoritePopularMoviesOneShot() {
+        Log.d(TAG, "Actively retrieving favorite popular movies in one shot from the DataBase in Repo");
+        return mMovieDao.getFavoritePopularMoviesOneShot();
+    }
+
     public LiveData<List<MovieEntry>> getPopularMovies() {
         Log.d(TAG, "Actively retrieving popular movies from the DataBase in Repo");
         return mMovieDao.getPopularMovies();
@@ -158,7 +168,7 @@ public class MovieRepository {
         String topRatedQuery = context.getString(R.string.pref_sort_top_rated);
         String favoriteQuery = context.getString(R.string.pref_sort_favorite);
 
-        if(queryType.equals(favoriteQuery)) {
+        if (queryType.equals(favoriteQuery)) {
             return getFavoriteMovies();
 
         } else if (queryType.equals(topRatedQuery)) {
@@ -181,26 +191,33 @@ public class MovieRepository {
         AppExecutors appExecutors = AppExecutors.getInstance();
 
         //for favorite movies just get offline results
-        if(sortOrder.equals(favoriteQuery)) {
+        if (sortOrder.equals(favoriteQuery)) {
 
-            return new NetworkBoundResource<List<MovieEntry>,List<MovieEntry>>(appExecutors) {
+            return new NetworkBoundResource<List<MovieEntry>, List<MovieEntry>>(appExecutors) {
 
                 //get results only offline
                 //so shouldFetch is false and createCall, saveCallResult are not used
 
                 @Override
-                protected void saveCallResult(@NonNull List<MovieEntry> data) { }
+                protected void saveCallResult(@NonNull List<MovieEntry> data) {
+                }
 
                 @Override
-                protected boolean shouldFetch(@Nullable List<MovieEntry> data) { return false; }
+                protected boolean shouldFetch(@Nullable List<MovieEntry> data) {
+                    return false;
+                }
 
                 @NonNull
                 @Override
-                protected LiveData<List<MovieEntry>> loadFromDb() { return getFavoriteMovies(); }
+                protected LiveData<List<MovieEntry>> loadFromDb() {
+                    return getFavoriteMovies();
+                }
 
                 @NonNull
                 @Override
-                protected LiveData<ApiResponse<List<MovieEntry>>> createCall() { return new MediatorLiveData<>(); }
+                protected LiveData<ApiResponse<List<MovieEntry>>> createCall() {
+                    return new MediatorLiveData<>();
+                }
 
             }.asLiveData();
 
@@ -217,10 +234,13 @@ public class MovieRepository {
                     List<MovieEntry> moviesFetchedFromNetwork = responseData.getResults();
 
                     //if no movies fetched from network even after successful network transaction
-                    if (moviesFetchedFromNetwork!=null &&
+                    if (moviesFetchedFromNetwork != null &&
                             moviesFetchedFromNetwork.size() == 0) {
-                        if(isTopRated) { mMovieDao.deleteAllTopRatedMoviesExceptFavorites(); }
-                        else { mMovieDao.deleteAllPopularMoviesExceptFavorites(); }
+                        if (isTopRated) {
+                            mMovieDao.deleteAllTopRatedMoviesExceptFavorites();
+                        } else {
+                            mMovieDao.deleteAllPopularMoviesExceptFavorites();
+                        }
                         return;
                     }
 
@@ -231,13 +251,16 @@ public class MovieRepository {
                     //set appropriate flag for fetched movies
                     for (MovieEntry entry : moviesFetchedFromNetwork) {
                         resetSortFlags(entry);
-                        if(isTopRated) { entry.setIsTopRated(MOVIE_ATTR_FLAG_TRUE); }
-                        else { entry.setIsPopular(MOVIE_ATTR_FLAG_TRUE);}
+                        if (isTopRated) {
+                            entry.setIsTopRated(MOVIE_ATTR_FLAG_TRUE);
+                        } else {
+                            entry.setIsPopular(MOVIE_ATTR_FLAG_TRUE);
+                        }
                     }
 
                     // process favorite movies
                     // add favorite movies to the list or just update favorite flag if already in network list
-                    adjustFavoriteMovies(moviesFetchedFromNetwork);
+                    adjustFavoriteMovies(moviesFetchedFromNetwork, isTopRated);
 
                     //set updatedAt time to current time in millis
                     setUpdatedAtToCurrent(moviesFetchedFromNetwork);
@@ -246,9 +269,12 @@ public class MovieRepository {
                     mDb.beginTransaction();
                     try {
                         //clear old movies
-                        mMovieDao.deleteAllFavoriteMovies();
-                        if(isTopRated) { mMovieDao.deleteAllTopRatedMovies(); }
-                        else { mMovieDao.deleteAllPopularMovies(); }
+//                        mMovieDao.deleteAllFavoriteMovies();
+                        if (isTopRated) {
+                            mMovieDao.deleteAllTopRatedMovies();
+                        } else {
+                            mMovieDao.deleteAllPopularMovies();
+                        }
 
                         mMovieDao.insertAll(moviesFetchedFromNetwork);
                         mDb.setTransactionSuccessful();
@@ -260,8 +286,9 @@ public class MovieRepository {
 
                 @Override
                 protected boolean shouldFetch(@Nullable List<MovieEntry> data) {
-                    if(data == null || data.size() == 0 || forceUpdate) { return true; }
-                    else {
+                    if (data == null || data.size() == 0 || forceUpdate) {
+                        return true;
+                    } else {
                         return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
                     }
                 }
@@ -269,8 +296,11 @@ public class MovieRepository {
                 @NonNull
                 @Override
                 protected LiveData<List<MovieEntry>> loadFromDb() {
-                    if(isTopRated) { return getTopRatedMovies(); }
-                    else { return getPopularMovies(); }
+                    if (isTopRated) {
+                        return getTopRatedMovies();
+                    } else {
+                        return getPopularMovies();
+                    }
                 }
 
                 @NonNull
@@ -306,14 +336,19 @@ public class MovieRepository {
     }
 
     private void setUpdatedAtToCurrent(List<MovieEntry> moviesFetchedFromNetwork) {
-        for (MovieEntry movieEntry:
-             moviesFetchedFromNetwork) {
+        for (MovieEntry movieEntry :
+                moviesFetchedFromNetwork) {
             movieEntry.setUpdatedAt(System.currentTimeMillis());
         }
     }
 
-    private void adjustFavoriteMovies(List<MovieEntry> moviesFetchedFromNetwork) {
-        List<MovieEntry> favoriteMovies = mMovieDao.getFavoriteMoviesOneShot();
+    private void adjustFavoriteMovies(List<MovieEntry> moviesFetchedFromNetwork, boolean isTopRated) {
+        List<MovieEntry> favoriteMovies;
+        if (isTopRated) {
+            favoriteMovies = getFavoriteTopRatedMoviesOneShot();
+        } else {
+            favoriteMovies = getFavoritePopularMoviesOneShot();
+        }
 
         if (favoriteMovies != null && favoriteMovies.size() != 0) {
             for (MovieEntry favoriteMovie :
@@ -326,6 +361,9 @@ public class MovieRepository {
                     moviesFetchedFromNetwork.get(matchingMovieIndex).setIsFavorite(MOVIE_ATTR_FLAG_TRUE);
                 } //couldn't find the favorite movie in list so retain this movie by adding to list
                 else {
+                    //remove top rated or popular flags from favorite movie as this is not in the list
+                    resetSortFlags(favoriteMovie);
+                    favoriteMovie.setIsFavorite(MOVIE_ATTR_FLAG_TRUE);
                     moviesFetchedFromNetwork.add(favoriteMovie);
                 }
             }
@@ -333,8 +371,8 @@ public class MovieRepository {
     }
 
     private static int findMovieIndexByIdInList(int id, List<MovieEntry> movieEntryList) {
-        for(MovieEntry movieEntry : movieEntryList) {
-            if(movieEntry.getId() == id) {
+        for (MovieEntry movieEntry : movieEntryList) {
+            if (movieEntry.getId() == id) {
                 return movieEntryList.indexOf(movieEntry);
             }
         }
@@ -342,16 +380,15 @@ public class MovieRepository {
     }
 
     public void setIsFavorite(int isFavorite, int movieId, FavoriteMarkedListener listener) {
-        if(isFavorite == MOVIE_ATTR_FLAG_TRUE || isFavorite == MOVIE_ATTR_FLAG_FALSE) {
+        if (isFavorite == MOVIE_ATTR_FLAG_TRUE || isFavorite == MOVIE_ATTR_FLAG_FALSE) {
             AppExecutors.getInstance().diskIO().execute(() -> {
                 mMovieDao.setIsFavorite(isFavorite, movieId);
-                if( listener != null && isFavorite == MOVIE_ATTR_FLAG_TRUE) {
+                if (listener != null && isFavorite == MOVIE_ATTR_FLAG_TRUE) {
                     listener.onFavoriteMarkedSaved(true);
                 }
             });
         }
     }
-
 
 
     public interface FavoriteMarkedListener {
@@ -364,24 +401,31 @@ public class MovieRepository {
     public LiveData<Resource<MovieEntry>> loadMovieById(int movieId) {
         AppExecutors appExecutors = AppExecutors.getInstance();
 
-        return new NetworkBoundResource<MovieEntry,MovieEntry>(appExecutors) {
+        return new NetworkBoundResource<MovieEntry, MovieEntry>(appExecutors) {
 
             //get results only offline
             //so shouldFetch is false and createCall, saveCallResult are not used
 
             @Override
-            protected void saveCallResult(@NonNull MovieEntry data) { }
+            protected void saveCallResult(@NonNull MovieEntry data) {
+            }
 
             @Override
-            protected boolean shouldFetch(@Nullable MovieEntry data) { return false; }
+            protected boolean shouldFetch(@Nullable MovieEntry data) {
+                return false;
+            }
 
             @NonNull
             @Override
-            protected LiveData<MovieEntry> loadFromDb() { return getMovieById(movieId); }
+            protected LiveData<MovieEntry> loadFromDb() {
+                return getMovieById(movieId);
+            }
 
             @NonNull
             @Override
-            protected LiveData<ApiResponse<MovieEntry>> createCall() { return new MediatorLiveData<>(); }
+            protected LiveData<ApiResponse<MovieEntry>> createCall() {
+                return new MediatorLiveData<>();
+            }
 
         }.asLiveData();
     }
@@ -421,8 +465,9 @@ public class MovieRepository {
 
             @Override
             protected boolean shouldFetch(@Nullable List<MovieTrailerEntry> data) {
-                if(data == null || data.size() == 0 || forceUpdate) { return true; }
-                else {
+                if (data == null || data.size() == 0 || forceUpdate) {
+                    return true;
+                } else {
                     return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
                 }
             }
@@ -448,12 +493,12 @@ public class MovieRepository {
 
         List<MovieTrailerEntry> filteredVideos = new ArrayList<>();
 
-        for (MovieVideoResponseEntry videoEntry:
+        for (MovieVideoResponseEntry videoEntry :
                 videosFetchedFromNetwork) {
             String site = videoEntry.getSite();
             String type = videoEntry.getType();
 
-            if(TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE.equals(site)
+            if (TMDB_TRAILER_JSON_SITE_VALUE_YOUTUBE.equals(site)
                     && TMDB_TRAILER_JSON_TYPE_VALUE_TRAILER.equals(type)) {
                 //set updatedAt time to current time in millis
                 filteredVideos.add(new MovieTrailerEntry(movieId, videoEntry.getId(),
@@ -498,8 +543,9 @@ public class MovieRepository {
 
             @Override
             protected boolean shouldFetch(@Nullable List<MovieReviewEntry> data) {
-                if(data == null || data.size() == 0 || forceUpdate) { return true; }
-                else {
+                if (data == null || data.size() == 0 || forceUpdate) {
+                    return true;
+                } else {
                     return !isFresh(data.get(0).getUpdatedAt(), NETWORK_UPDATE_THRESHOLD_IN_HOURS);
                 }
             }
@@ -522,8 +568,8 @@ public class MovieRepository {
 
     private void adjustReviewAttributes(int movieId,
                                         @NonNull List<MovieReviewEntry> reviewsFetchedFromNetwork) {
-        for (MovieReviewEntry reviewEntry:
-             reviewsFetchedFromNetwork) {
+        for (MovieReviewEntry reviewEntry :
+                reviewsFetchedFromNetwork) {
 
             //save movie id
             reviewEntry.setMovieId(movieId);

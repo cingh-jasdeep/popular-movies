@@ -129,7 +129,17 @@ public class MoviesAdapter extends RecyclerView.Adapter<MoviesAdapter.MoviesAdap
                         public void onError() {
                             Picasso.with(mContext)
                                     .load(movie.getMoviePosterUrl())
-                                    .into(holder.mPosterImageView);
+                                    .into(holder.mPosterImageView, new Callback() {
+                                        @Override
+                                        public void onSuccess() {
+                                            fadeInItem(holder);
+                                        }
+
+                                        @Override
+                                        public void onError() {
+
+                                        }
+                                    });
                         }
                     });
             String posterA11y = String.format(mContext.getString(R.string.a11y_poster), movie.getMovieTitle());

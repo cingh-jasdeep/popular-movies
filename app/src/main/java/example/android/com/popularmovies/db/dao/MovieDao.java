@@ -35,6 +35,15 @@ public abstract class MovieDao {
     @Query("SELECT * FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract List<MovieEntry> getFavoriteMoviesOneShot();
 
+    @Query("SELECT * FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE
+            +" AND isTopRated = "+ MOVIE_ATTR_FLAG_TRUE)
+    public abstract List<MovieEntry> getFavoriteTopRatedMoviesOneShot();
+
+    @Query("SELECT * FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE
+            +" AND isPopular = "+ MOVIE_ATTR_FLAG_TRUE)
+    public abstract List<MovieEntry> getFavoritePopularMoviesOneShot();
+
+
     @Query("DELETE FROM movie ")
     public abstract void deleteAll();
 
@@ -42,14 +51,14 @@ public abstract class MovieDao {
     public abstract void deleteAllTopRatedMovies();
 
     @Query("DELETE FROM movie WHERE isTopRated = " + MOVIE_ATTR_FLAG_TRUE
-            +" AND isPopular != "+ MOVIE_ATTR_FLAG_TRUE)
+            +" AND isFavorite != "+ MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllTopRatedMoviesExceptFavorites();
 
     @Query("DELETE FROM movie WHERE isPopular = " + MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllPopularMovies();
 
     @Query("DELETE FROM movie WHERE isPopular = " + MOVIE_ATTR_FLAG_TRUE
-                +" AND isPopular != "+ MOVIE_ATTR_FLAG_TRUE)
+                +" AND isFavorite != "+ MOVIE_ATTR_FLAG_TRUE)
     public abstract void deleteAllPopularMoviesExceptFavorites();
 
     @Query("DELETE FROM movie WHERE isFavorite = " + MOVIE_ATTR_FLAG_TRUE)
@@ -85,5 +94,4 @@ public abstract class MovieDao {
         deleteAllFavoriteMovies();
         insertAll(movieEntries);
     }
-
 }
