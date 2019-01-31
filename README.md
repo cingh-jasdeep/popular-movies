@@ -5,6 +5,8 @@ Waheguru ji
 This is submission project code which is part [udacity android developer course](https://in.udacity.com/course/android-developer-nanodegree-by-google--nd801).
 The **Popular Moves** app shows a grid of most popular, top rated and user defined favorite movies along with the details of each movie once it is selected.
 
+[Scroll Down to screenshots](#ss)
+
 ## Why this Project
 To become an Android developer, one must know how to bring particular mobile experiences to life. Specifically, one needs to know how to build clean and compelling user interfaces (UIs), fetch data from network services, and optimize the experience for various mobile devices. 
 
@@ -35,7 +37,7 @@ This project was build in 2 parts. Through this project, I learnt to:
 - allow users to view and play trailers (either in the youtube app or a web browser)
 - allow users to read reviews of a selected movie
 - allow users to mark a movie as a favorite in the details view by tapping a button (star)
-- make use of Android Architecture Components (Room, LiveData, ViewModel and Lifecycle) to create a robust an efficient application
+- make use of Android Architecture Components (Room, LiveData, ViewModel and Lifecycle) to create a robust and efficient application
 - create a database using Room to store the names and ids of the user's favorite movies (and optionally, the rest of the information needed to display their favorites collection while offline)
 - modify the existing sorting criteria for the main view to include an additional pivot to show their favorites collection
 - build a fully featured application that looks and feels natural on the latest Android operating system
@@ -46,7 +48,7 @@ This project was build in 2 parts. Through this project, I learnt to:
 
 - [Link](https://github.com/cingh-jasdeep/popular-movies/projects/1) to project to outline my workflow
 
-- Here are some screenshots
+- <a name="ss"></a>Here are some screenshots
 
 |<img src="/screenshots/movie_grid_view.png" width="150">|<img src="/screenshots/movie_details.png" width="150">|<img src="/screenshots/movie_trailers_screenshots.png" width="150">|<img src="/screenshots/sort_order_setting.png" width="150">|
 
