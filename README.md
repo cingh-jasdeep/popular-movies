@@ -14,7 +14,7 @@ By building this app, one can demonstrate understanding of the foundational elem
 The app communicates with the Internet and provides a responsive and delightful user experience.
 
 ## What I learnt?
-This project was build in 2 parts. Through this project, I learnt to:
+This project was built in 2 parts. Through this project, I learnt to:
 
 ### Part 1
 - present the user with a grid arrangement of movie posters upon launch
